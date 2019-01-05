@@ -1,0 +1,82 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FA696149-9CFD-4F15-BA1E-FE27B397C786}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>notdot.LOLCode</RootNamespace>
+    <AssemblyName>LOLCode.net</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="LOLCodeCodeProvider.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="LOLTree.cs" />
+    <Compile Include="Parser\1.2\Parser.cs" />
+    <Compile Include="Parser\1.2\Parser.user.cs" />
+    <Compile Include="Parser\1.2\Scanner.cs" />
+    <Compile Include="Parser\Pass1\Parser.cs" />
+    <Compile Include="Parser\Pass1\Parser.user.cs" />
+    <Compile Include="Parser\Pass1\Scanner.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SymbolTable.cs" />
+    <Compile Include="UnicodeNameLookup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\stdlol\stdlol.csproj">
+      <Project>{AD2F084A-C2C4-4BD5-89CA-EB656B6415BC}</Project>
+      <Name>stdlol</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Parser\1.2\LOLCode.ATG" />
+    <None Include="Parser\1.2\Parser.frame" />
+    <None Include="Parser\1.2\Scanner.frame" />
+    <None Include="Parser\Pass1\LOLCode.ATG" />
+    <None Include="Parser\Pass1\Parser.frame" />
+    <None Include="Parser\Pass1\Scanner.frame" />
+    <EmbeddedResource Include="UnicodeNames.dat" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
