@@ -33,435 +33,458 @@ internal partial class Parser {
 
 
 
-	public Parser(Scanner scanner) {
-		this.scanner = scanner;
-		//errors = new Errors();
-	}
+		public Parser(Scanner scanner) => this.scanner = scanner;//errors = new Errors();
 
-	void SynErr (int n) {
-		if (errDist >= minErrDist) errors.SynErr(filename, la.line, la.col, n);
-		errDist = 0;
+		void SynErr (int n) {
+		if (this.errDist >= minErrDist)
+			{
+				this.errors.SynErr(this.filename, this.la.line, this.la.col, n);
+			}
+
+			this.errDist = 0;
 	}
 
 	public void SemErr (string msg) {
-		if (errDist >= minErrDist) errors.SemErr(filename, t.line, t.col, msg);
-		errDist = 0;
+		if (this.errDist >= minErrDist)
+			{
+				this.errors.SemErr(this.filename, this.t.line, this.t.col, msg);
+			}
+
+			this.errDist = 0;
 	}
 	
 	void Get () {
 		for (;;) {
-			t = la;
-			la = scanner.Scan();
-			if (la.kind <= maxT) { ++errDist; break; }
-				if (la.kind == 79) {
+				this.t = this.la;
+				this.la = this.scanner.Scan();
+			if (this.la.kind <= maxT) { ++this.errDist; break; }
+				if (this.la.kind == 79) {
 				}
-				if (la.kind == 80) {
+				if (this.la.kind == 80) {
 				}
-				if (la.kind == 81) {
+				if (this.la.kind == 81) {
 				}
 
-			la = t;
+				this.la = this.t;
 		}
 	}
 	
 	void Expect (int n) {
-		if (la.kind==n) Get(); else { SynErr(n); }
+		if (this.la.kind==n) { this.Get(); } else { this.SynErr(n); }
 	}
-	
-	bool StartOf (int s) {
-		return set[s, la.kind];
-	}
-	
-	void ExpectWeak (int n, int follow) {
-		if (la.kind == n) Get();
-		else {
-			SynErr(n);
-			while (!StartOf(follow)) Get();
-		}
+
+		bool StartOf(int s) => this.set[s, this.la.kind];
+
+		void ExpectWeak (int n, int follow) {
+		if (this.la.kind == n)
+			{
+				this.Get();
+			}
+			else {
+				this.SynErr(n);
+			while (!this.StartOf(follow))
+				{
+					this.Get();
+				}
+			}
 	}
 	
 	bool WeakSeparator (int n, int syFol, int repFol) {
-		bool[] s = new bool[maxT+1];
-		if (la.kind == n) { Get(); return true; }
-		else if (StartOf(repFol)) return false;
-		else {
-			for (int i=0; i <= maxT; i++) {
-				s[i] = set[syFol, i] || set[repFol, i] || set[0, i];
+		var s = new bool[maxT+1];
+		if (this.la.kind == n) { this.Get(); return true; }
+		else if (this.StartOf(repFol))
+			{
+				return false;
 			}
-			SynErr(n);
-			while (!s[la.kind]) Get();
-			return StartOf(syFol);
+			else {
+			for (var i=0; i <= maxT; i++) {
+				s[i] = this.set[syFol, i] || this.set[repFol, i] || this.set[0, i];
+			}
+				this.SynErr(n);
+			while (!s[this.la.kind])
+				{
+					this.Get();
+				}
+
+				return this.StartOf(syFol);
 		}
 	}
 	
 	void LOLCode() {
-		Expect(6);
-		if (la.kind == 7) {
-			Get();
-			if (la.kind == 8) {
-				Get();
-				version = LOLCodeVersion.v1_0; 
-			} else if (la.kind == 9) {
-				Get();
-				version = LOLCodeVersion.IRCSPECZ; 
-			} else if (la.kind == 10) {
-				Get();
-				version = LOLCodeVersion.v1_1; 
-			} else if (la.kind == 11) {
-				Get();
-				version = LOLCodeVersion.v1_2; 
-			} else SynErr(79);
+			this.Expect(6);
+		if (this.la.kind == 7) {
+				this.Get();
+			if (this.la.kind == 8) {
+					this.Get();
+					this.version = LOLCodeVersion.v1_0; 
+			} else if (this.la.kind == 9) {
+					this.Get();
+					this.version = LOLCodeVersion.IRCSPECZ; 
+			} else if (this.la.kind == 10) {
+					this.Get();
+					this.version = LOLCodeVersion.v1_1; 
+			} else if (this.la.kind == 11) {
+					this.Get();
+					this.version = LOLCodeVersion.v1_2; 
+			} else
+				{
+					this.SynErr(79);
+				}
+			}
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		while (la.kind == 5) {
-			Get();
-		}
-		Statements();
-		Expect(12);
-		while (la.kind == 5) {
-			Get();
+			this.Statements();
+			this.Expect(12);
+		while (this.la.kind == 5) {
+				this.Get();
 		}
 	}
 
 	void Statements() {
-		while (StartOf(1)) {
-			if (la.kind == 13) {
-				FunctionDeclaration();
-			} else if (la.kind == 15) {
-				VarDecl();
+		while (this.StartOf(1)) {
+			if (this.la.kind == 13) {
+					this.FunctionDeclaration();
+			} else if (this.la.kind == 15) {
+					this.VarDecl();
 			} else {
-				OtherStatement();
+					this.OtherStatement();
 			}
-			Expect(5);
-			while (la.kind == 5) {
-				Get();
+				this.Expect(5);
+			while (this.la.kind == 5) {
+					this.Get();
 			}
 		}
 	}
 
 	void FunctionDeclaration() {
-		int arity = 0; string name; 
-		Expect(13);
-		Expect(14);
-		Expect(15);
-		Expect(1);
-		name = t.val; 
-		if (la.kind == 16) {
-			Get();
-			Expect(1);
+		var arity = 0; string name;
+			this.Expect(13);
+			this.Expect(14);
+			this.Expect(15);
+			this.Expect(1);
+		name = this.t.val; 
+		if (this.la.kind == 16) {
+				this.Get();
+				this.Expect(1);
 			arity++; 
-			while (la.kind == 17) {
-				Get();
-				Expect(16);
-				Expect(1);
+			while (this.la.kind == 17) {
+					this.Get();
+					this.Expect(16);
+					this.Expect(1);
 				arity++; 
 			}
 		}
-		while (la.kind == 5) {
-			Get();
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		while (StartOf(2)) {
-			if (la.kind == 15) {
-				VarDecl();
+		while (this.StartOf(2)) {
+			if (this.la.kind == 15) {
+					this.VarDecl();
 			} else {
-				OtherStatement();
+					this.OtherStatement();
 			}
-			Expect(5);
-			while (la.kind == 5) {
-				Get();
+				this.Expect(5);
+			while (this.la.kind == 5) {
+					this.Get();
 			}
 		}
-		Expect(18);
-		Expect(19);
-		Expect(20);
-		Expect(21);
-		globals.AddSymbol(new UserFunctionRef(name, arity, false)); 
+			this.Expect(18);
+			this.Expect(19);
+			this.Expect(20);
+			this.Expect(21);
+			this.globals.AddSymbol(new UserFunctionRef(name, arity, false)); 
 	}
 
 	void VarDecl() {
-		Expect(15);
-		Expect(22);
-		Expect(23);
-		Expect(1);
-		if (la.kind == 24) {
-			Get();
-			OtherStatement();
+			this.Expect(15);
+			this.Expect(22);
+			this.Expect(23);
+			this.Expect(1);
+		if (this.la.kind == 24) {
+				this.Get();
+				this.OtherStatement();
 		}
 	}
 
 	void OtherStatement() {
-		if (la.kind == 1) {
-			Get();
-		} else if (la.kind == 2) {
-			Get();
-		} else if (la.kind == 3) {
-			Get();
-		} else if (la.kind == 4) {
-			Get();
-		} else if (StartOf(3)) {
-			Keyword();
-		} else SynErr(80);
-		while (StartOf(4)) {
-			if (la.kind == 1) {
-				Get();
-			} else if (la.kind == 2) {
-				Get();
-			} else if (la.kind == 3) {
-				Get();
-			} else if (la.kind == 4) {
-				Get();
+		if (this.la.kind == 1) {
+				this.Get();
+		} else if (this.la.kind == 2) {
+				this.Get();
+		} else if (this.la.kind == 3) {
+				this.Get();
+		} else if (this.la.kind == 4) {
+				this.Get();
+		} else if (this.StartOf(3)) {
+				this.Keyword();
+		} else
+			{
+				this.SynErr(80);
+			}
+
+			while (this.StartOf(4)) {
+			if (this.la.kind == 1) {
+					this.Get();
+			} else if (this.la.kind == 2) {
+					this.Get();
+			} else if (this.la.kind == 3) {
+					this.Get();
+			} else if (this.la.kind == 4) {
+					this.Get();
 			} else {
-				Keyword();
+					this.Keyword();
 			}
 		}
 	}
 
 	void Keyword() {
-		switch (la.kind) {
+		switch (this.la.kind) {
 		case 25: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 22: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 26: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 27: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 28: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 29: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 30: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 31: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 32: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 33: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 16: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 34: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 35: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 23: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 24: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 17: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 36: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 37: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 38: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 39: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 40: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 41: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 42: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 43: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 44: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 45: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 46: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 47: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 48: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 49: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 50: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 51: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 52: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 53: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 54: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 55: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 56: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 57: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 58: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 59: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 60: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 61: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 62: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 63: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 64: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 65: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 66: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 67: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 68: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 69: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 70: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 71: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 72: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 73: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 74: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 75: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 76: {
-			Get();
+						this.Get();
 			break;
 		}
 		case 77: {
-			Get();
+						this.Get();
 			break;
 		}
-		default: SynErr(81); break;
+		default: this.SynErr(81); break;
 		}
 	}
 
 
 
 	public void Parse() {
-		la = new Token();
-		la.val = "";		
-		Get();
-		LOLCode();
+			this.la = new Token();
+			this.la.val = "";
+			this.Get();
+			this.LOLCode();
 
-    Expect(0);
+			this.Expect(0);
 	}
 	
 	bool[,] set = {
@@ -479,12 +502,10 @@ public class Errors {
 	//public string errMsgFormat = "-- \"{0}\" line {1} col {2}: {3}"; // 0=file, 1=line, 2=column, 3=text
 
 	private CompilerErrorCollection cec;
-	
-	public Errors(CompilerErrorCollection c) {
-		this.cec = c;
-	}
-  
-	public void SynErr (string file, int line, int col, int n) {
+
+		public Errors(CompilerErrorCollection c) => this.cec = c;
+
+		public void SynErr (string file, int line, int col, int n) {
 		string s;
 		switch (n) {
 			case 0: s = "EOF expected"; break;
@@ -572,27 +593,23 @@ public class Errors {
 
 			default: s = "error " + n; break;
 		}
-		cec.Add(new CompilerError(file, line, col, n.ToString(), s));
+			this.cec.Add(new CompilerError(file, line, col, n.ToString(), s));
 	}
 
-	public void SemErr (string file, int line, int col, string s) {
-		cec.Add(new CompilerError(file, line, col, "", s));
-	}
-	
-	public void SemErr (string s) {
-		cec.Add(new CompilerError(null, 0, 0, "", s));
-	}
-	
-	public void Warning (string file, int line, int col, string s) {
-		CompilerError ce = new CompilerError(file, line, col, "", s);
+		public void SemErr(string file, int line, int col, string s) => this.cec.Add(new CompilerError(file, line, col, "", s));
+
+		public void SemErr(string s) => this.cec.Add(new CompilerError(null, 0, 0, "", s));
+
+		public void Warning (string file, int line, int col, string s) {
+		var ce = new CompilerError(file, line, col, "", s);
 		ce.IsWarning = true;
-		cec.Add(ce);
+			this.cec.Add(ce);
 	}
 	
 	public void Warning(string s) {
-		CompilerError ce = new CompilerError(null, 0, 0, "", s);
+		var ce = new CompilerError(null, 0, 0, "", s);
 		ce.IsWarning = true;
-		cec.Add(ce);
+			this.cec.Add(ce);
 	}
 } // Errors
 

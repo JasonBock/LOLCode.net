@@ -5,551 +5,644 @@ using System.CodeDom.Compiler;
 
 namespace notdot.LOLCode.Parser.v1_2
 {
-	internal partial class Parser {
-	const int _EOF = 0;
-	const int _ident = 1;
-	const int _intCon = 2;
-	const int _realCon = 3;
-	const int _stringCon = 4;
-	const int _eos = 5;
-	const int _can = 6;
-	const int _in = 7;
-	const int _im = 8;
-	const int _outta = 9;
-	const int _mkay = 10;
-	const int _r = 11;
-	const int _is = 12;
-	const int _how = 13;
-	const int maxT = 63;
-	const int _comment = 64;
-	const int _blockcomment = 65;
-	const int _continuation = 66;
+	internal partial class Parser
+	{
+		const int _EOF = 0;
+		const int _ident = 1;
+		const int _intCon = 2;
+		const int _realCon = 3;
+		const int _stringCon = 4;
+		const int _eos = 5;
+		const int _can = 6;
+		const int _in = 7;
+		const int _im = 8;
+		const int _outta = 9;
+		const int _mkay = 10;
+		const int _r = 11;
+		const int _is = 12;
+		const int _how = 13;
+		const int maxT = 63;
+		const int _comment = 64;
+		const int _blockcomment = 65;
+		const int _continuation = 66;
 
-	const bool T = true;
-	const bool x = false;
-	const int minErrDist = 2;
+		const bool T = true;
+		const bool x = false;
+		const int minErrDist = 2;
 	
-	public Scanner scanner;
-	public Errors  errors;
+		public Scanner scanner;
+		public Errors  errors;
 
-	public Token t;    // last recognized token
-	public Token la;   // lookahead token
-	int errDist = minErrDist;
+		public Token t;    // last recognized token
+		public Token la;   // lookahead token
+		int errDist = minErrDist;
 
+		public Parser(Scanner scanner) => this.scanner = scanner;
 
+		void SynErr (int n) {
+		if (this.errDist >= minErrDist)
+			{
+				this.errors.SynErr(this.filename, this.la.line, this.la.col, n);
+			}
 
-	public Parser(Scanner scanner) {
-		this.scanner = scanner;
-		//errors = new Errors();
-	}
-
-	void SynErr (int n) {
-		if (errDist >= minErrDist) errors.SynErr(filename, la.line, la.col, n);
-		errDist = 0;
+			this.errDist = 0;
 	}
 
 	public void SemErr (string msg) {
-		if (errDist >= minErrDist) errors.SemErr(filename, t.line, t.col, msg);
-		errDist = 0;
+		if (this.errDist >= minErrDist)
+			{
+				this.errors.SemErr(this.filename, this.t.line, this.t.col, msg);
+			}
+
+			this.errDist = 0;
 	}
 	
 	void Get () {
 		for (;;) {
-			t = la;
-			la = scanner.Scan();
-			if (la.kind <= maxT) { ++errDist; break; }
-				if (la.kind == 64) {
+				this.t = this.la;
+				this.la = this.scanner.Scan();
+			if (this.la.kind <= maxT) { ++this.errDist; break; }
+				if (this.la.kind == 64) {
 				}
-				if (la.kind == 65) {
+				if (this.la.kind == 65) {
 				}
-				if (la.kind == 66) {
+				if (this.la.kind == 66) {
 				}
 
-			la = t;
+				this.la = this.t;
 		}
 	}
 	
 	void Expect (int n) {
-		if (la.kind==n) Get(); else { SynErr(n); }
+		if (this.la.kind==n) { this.Get(); } else { this.SynErr(n); }
 	}
-	
-	bool StartOf (int s) {
-		return set[s, la.kind];
-	}
-	
-	void ExpectWeak (int n, int follow) {
-		if (la.kind == n) Get();
-		else {
-			SynErr(n);
-			while (!StartOf(follow)) Get();
-		}
+
+		bool StartOf(int s) => this.set[s, this.la.kind];
+
+		void ExpectWeak (int n, int follow) {
+		if (this.la.kind == n)
+			{
+				this.Get();
+			}
+			else {
+				this.SynErr(n);
+			while (!this.StartOf(follow))
+				{
+					this.Get();
+				}
+			}
 	}
 	
 	bool WeakSeparator (int n, int syFol, int repFol) {
-		bool[] s = new bool[maxT+1];
-		if (la.kind == n) { Get(); return true; }
-		else if (StartOf(repFol)) return false;
-		else {
-			for (int i=0; i <= maxT; i++) {
-				s[i] = set[syFol, i] || set[repFol, i] || set[0, i];
+		var s = new bool[maxT+1];
+		if (this.la.kind == n) { this.Get(); return true; }
+		else if (this.StartOf(repFol))
+			{
+				return false;
 			}
-			SynErr(n);
-			while (!s[la.kind]) Get();
-			return StartOf(syFol);
+			else {
+			for (var i=0; i <= maxT; i++) {
+				s[i] = this.set[syFol, i] || this.set[repFol, i] || this.set[0, i];
+			}
+				this.SynErr(n);
+			while (!s[this.la.kind])
+				{
+					this.Get();
+				}
+
+				return this.StartOf(syFol);
 		}
 	}
 	
 	void LOLCode() {
-		Expect(14);
-		if (la.kind == 15) {
-			Get();
-			Expect(16);
-			program.version = LOLCodeVersion.v1_2; 
+			this.Expect(14);
+		if (this.la.kind == 15) {
+				this.Get();
+				this.Expect(16);
+				this.program.version = LOLCodeVersion.v1_2; 
 		}
-		while (la.kind == 5) {
-			Get();
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		Statements(out program.methods["Main"].statements);
-		Expect(17);
-		while (la.kind == 5) {
-			Get();
+			this.Statements(out this.program.methods["Main"].statements);
+			this.Expect(17);
+		while (this.la.kind == 5) {
+				this.Get();
 		}
 	}
 
 	void Statements(out Statement stat) {
-		BlockStatement bs = new BlockStatement(GetPragma(t)); stat = bs; 
-		Statement s; 
-		while ((StartOf(1) || la.kind == _can || la.kind == _how) && scanner.Peek().kind != _outta) {
-			if (la.kind == 6) {
-				CanHasStatement();
-			} else if (la.kind == 13) {
-				FunctionDeclaration();
-			} else if (StartOf(1)) {
-				Statement(out s);
-				bs.statements.Add(s); 
-			} else SynErr(64);
-			while (la.kind == 5) {
-				Get();
+		var bs = new BlockStatement(this.GetPragma(this.t)); stat = bs;
+			while ((this.StartOf(1) || this.la.kind == _can || this.la.kind == _how) && this.scanner.Peek().kind != _outta)
+			{
+				if (this.la.kind == 6)
+				{
+					this.CanHasStatement();
+				}
+				else if (this.la.kind == 13)
+				{
+					this.FunctionDeclaration();
+				}
+				else if (this.StartOf(1))
+				{
+					this.Statement(out var s);
+					bs.statements.Add(s);
+				}
+				else
+				{
+					this.SynErr(64);
+				}
+
+				while (this.la.kind == 5)
+				{
+					this.Get();
+				}
 			}
 		}
-	}
 
 	void CanHasStatement() {
-		StringBuilder sb = new StringBuilder(); 
-		Expect(6);
-		Expect(19);
-		Expect(1);
-		sb.Append(t.val); 
-		while (la.kind == 22) {
-			Get();
-			Expect(1);
-			sb.Append('.'); sb.Append(t.val); 
+		var sb = new StringBuilder();
+			this.Expect(6);
+			this.Expect(19);
+			this.Expect(1);
+		sb.Append(this.t.val); 
+		while (this.la.kind == 22) {
+				this.Get();
+				this.Expect(1);
+			sb.Append('.'); sb.Append(this.t.val); 
 		}
-		Expect(23);
-		if(!program.ImportLibrary(sb.ToString())) Error(string.Format("Library \"{0}\" not found.", sb.ToString())); 
-	}
-
-	void FunctionDeclaration() {
-		if(currentMethod != null) Error("Cannot define a function inside another function."); 
-		Expect(13);
-		Expect(57);
-		Expect(18);
-		Expect(1);
-		currentMethod = new LOLMethod(GetFunction(t.val), program); short arg = 0; 
-		if (la.kind == 30) {
-			Get();
-			Expect(1);
-			currentMethod.SetArgumentName(arg++, t.val); 
-			while (la.kind == 48) {
-				Get();
-				Expect(30);
-				Expect(1);
-				currentMethod.SetArgumentName(arg++, t.val); 
+			this.Expect(23);
+		if(!this.program.ImportLibrary(sb.ToString()))
+			{
+				this.Error(string.Format("Library \"{0}\" not found.", sb.ToString()));
 			}
 		}
-		while (la.kind == 5) {
-			Get();
+
+	void FunctionDeclaration() {
+		if(this.currentMethod != null)
+			{
+				this.Error("Cannot define a function inside another function.");
+			}
+
+			this.Expect(13);
+			this.Expect(57);
+			this.Expect(18);
+			this.Expect(1);
+			this.currentMethod = new LOLMethod(this.GetFunction(this.t.val), this.program); short arg = 0; 
+		if (this.la.kind == 30) {
+				this.Get();
+				this.Expect(1);
+				this.currentMethod.SetArgumentName(arg++, this.t.val); 
+			while (this.la.kind == 48) {
+					this.Get();
+					this.Expect(30);
+					this.Expect(1);
+					this.currentMethod.SetArgumentName(arg++, this.t.val); 
+			}
 		}
-		Statements(out currentMethod.statements);
-		Expect(58);
-		Expect(59);
-		Expect(60);
-		Expect(61);
-		program.methods.Add(currentMethod.info.Name, currentMethod); currentMethod = null; 
+		while (this.la.kind == 5) {
+				this.Get();
+		}
+			this.Statements(out this.currentMethod.statements);
+			this.Expect(58);
+			this.Expect(59);
+			this.Expect(60);
+			this.Expect(61);
+			this.program.methods.Add(this.currentMethod.info.Name, this.currentMethod); this.currentMethod = null; 
 	}
 
 	void Statement(out Statement stat) {
 		stat = null; 
-		if (la.kind == 18) {
-			IHasAStatement(out stat);
-		} else if (TokenAfterLValue().kind == _r) {
-			AssignmentStatement(out stat);
-		} else if (TokenAfterLValue().kind == _is) {
-			TypecastStatement(out stat);
-		} else if (la.kind == 24) {
-			GimmehStatement(out stat);
-		} else if (la.kind == 8) {
-			LoopStatement(out stat);
-		} else if (la.kind == 28) {
-			BreakStatement(out stat);
-		} else if (la.kind == 29) {
-			ContinueStatement(out stat);
-		} else if (la.kind == 33) {
-			OrlyStatement(out stat);
-		} else if (la.kind == 40) {
-			SwitchStatement(out stat);
-		} else if (la.kind == 43 || la.kind == 44) {
-			PrintStatement(out stat);
-		} else if (StartOf(2)) {
-			ExpressionStatement(out stat);
-		} else if (la.kind == 62) {
-			ReturnStatement(out stat);
-		} else SynErr(65);
-	}
+		if (this.la.kind == 18) {
+				this.IHasAStatement(out stat);
+		} else if (this.TokenAfterLValue().kind == _r) {
+				this.AssignmentStatement(out stat);
+		} else if (this.TokenAfterLValue().kind == _is) {
+				this.TypecastStatement(out stat);
+		} else if (this.la.kind == 24) {
+				this.GimmehStatement(out stat);
+		} else if (this.la.kind == 8) {
+				this.LoopStatement(out stat);
+		} else if (this.la.kind == 28) {
+				this.BreakStatement(out stat);
+		} else if (this.la.kind == 29) {
+				this.ContinueStatement(out stat);
+		} else if (this.la.kind == 33) {
+				this.OrlyStatement(out stat);
+		} else if (this.la.kind == 40) {
+				this.SwitchStatement(out stat);
+		} else if (this.la.kind == 43 || this.la.kind == 44) {
+				this.PrintStatement(out stat);
+		} else if (this.StartOf(2)) {
+				this.ExpressionStatement(out stat);
+		} else if (this.la.kind == 62) {
+				this.ReturnStatement(out stat);
+		} else
+			{
+				this.SynErr(65);
+			}
+		}
 
 	void IHasAStatement(out Statement stat) {
-		VariableDeclarationStatement vds = new VariableDeclarationStatement(GetPragma(la)); stat = vds; 
-		Expect(18);
-		Expect(19);
-		Expect(20);
-		Expect(1);
-		vds.var = DeclareVariable(t.val); SetEndPragma(stat); 
-		if (la.kind == 21) {
-			Get();
-			Expression(out vds.expression);
+		var vds = new VariableDeclarationStatement(this.GetPragma(this.la)); stat = vds;
+			this.Expect(18);
+			this.Expect(19);
+			this.Expect(20);
+			this.Expect(1);
+		vds.var = this.DeclareVariable(this.t.val); this.SetEndPragma(stat); 
+		if (this.la.kind == 21) {
+				this.Get();
+				this.Expression(out vds.expression);
 		}
 	}
 
 	void AssignmentStatement(out Statement stat) {
-		AssignmentStatement ass = new AssignmentStatement(GetPragma(la)); stat = ass; 
-		LValue(out ass.lval);
-		Expect(11);
-		Expression(out ass.rval);
-		SetEndPragma(stat); 
+		var ass = new AssignmentStatement(this.GetPragma(this.la)); stat = ass;
+			this.LValue(out ass.lval);
+			this.Expect(11);
+			this.Expression(out ass.rval);
+			this.SetEndPragma(stat); 
 	}
 
-	void TypecastStatement(out Statement stat) {
-		AssignmentStatement ass = new AssignmentStatement(GetPragma(la)); stat = ass; Type t; 
-		LValue(out ass.lval);
-		Expect(12);
-		Expect(46);
-		Expect(20);
-		Typename(out t);
-		SetEndPragma(ass); ass.rval = new TypecastExpression(ass.location, t, ass.lval); 
+	void TypecastStatement(out Statement stat)
+	{
+		var ass = new AssignmentStatement(this.GetPragma(this.la));
+		stat = ass;
+		this.LValue(out ass.lval);
+		this.Expect(12);
+		this.Expect(46);
+		this.Expect(20);
+		this.Typename(out var t);
+		this.SetEndPragma(ass);
+		ass.rval = new TypecastExpression(ass.location, t, ass.lval); 
 	}
 
 	void GimmehStatement(out Statement stat) {
-		InputStatement ins = new InputStatement(GetPragma(la)); stat = ins; 
-		Expect(24);
-		if (la.kind == 25 || la.kind == 26 || la.kind == 27) {
-			if (la.kind == 25) {
-				Get();
-			} else if (la.kind == 26) {
-				Get();
+		var ins = new InputStatement(this.GetPragma(this.la)); stat = ins;
+			this.Expect(24);
+		if (this.la.kind == 25 || this.la.kind == 26 || this.la.kind == 27) {
+			if (this.la.kind == 25) {
+					this.Get();
+			} else if (this.la.kind == 26) {
+					this.Get();
 				ins.amount = IOAmount.Word; 
 			} else {
-				Get();
+					this.Get();
 				ins.amount = IOAmount.Letter; 
 			}
 		}
-		LValue(out ins.dest);
-		SetEndPragma(stat); 
+			this.LValue(out ins.dest);
+			this.SetEndPragma(stat); 
 	}
 
 	void LoopStatement(out Statement stat) {
-		LoopStatement ls = new LoopStatement(GetPragma(la)); stat = ls; 
-		Expect(8);
-		Expect(7);
-		Expect(30);
-		Expect(1);
-		ls.name = t.val; BeginScope(); 
-		if (la.kind == 1) {
-			ls.StartOperation(GetPragma(la)); 
-			Get();
-			ls.SetOperationFunction(GetFunction(t.val)); 
-			if (la.kind == 30) {
-				Get();
+		var ls = new LoopStatement(this.GetPragma(this.la)); stat = ls;
+			this.Expect(8);
+			this.Expect(7);
+			this.Expect(30);
+			this.Expect(1);
+		ls.name = this.t.val; this.BeginScope(); 
+		if (this.la.kind == 1) {
+			ls.StartOperation(this.GetPragma(this.la));
+				this.Get();
+			ls.SetOperationFunction(this.GetFunction(this.t.val)); 
+			if (this.la.kind == 30) {
+					this.Get();
 			}
-			Expect(1);
-			ls.SetLoopVariable(GetPragma(t), GetVariable(t.val)); SetEndPragma(ls.operation); SetEndPragma(((ls.operation as AssignmentStatement).rval as FunctionExpression).arguments[0]); SetEndPragma((ls.operation as AssignmentStatement).rval); SetEndPragma((ls.operation as AssignmentStatement).lval); 
+				this.Expect(1);
+			ls.SetLoopVariable(this.GetPragma(this.t), this.GetVariable(this.t.val)); this.SetEndPragma(ls.operation); this.SetEndPragma(((ls.operation as AssignmentStatement).rval as FunctionExpression).arguments[0]); this.SetEndPragma((ls.operation as AssignmentStatement).rval); this.SetEndPragma((ls.operation as AssignmentStatement).lval); 
 		}
-		if (la.kind == 31 || la.kind == 32) {
-			if (la.kind == 31) {
-				Get();
+		if (this.la.kind == 31 || this.la.kind == 32) {
+			if (this.la.kind == 31) {
+					this.Get();
 				ls.type = LoopType.Until; 
 			} else {
-				Get();
+					this.Get();
 				ls.type = LoopType.While; 
 			}
-			Expression(out ls.condition);
+				this.Expression(out ls.condition);
 		}
-		SetEndPragma(stat); 
-		Expect(5);
-		while (la.kind == 5) {
-			Get();
+			this.SetEndPragma(stat);
+			this.Expect(5);
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		Statements(out ls.statements);
-		Expect(8);
-		Expect(9);
-		Expect(30);
-		Expect(1);
-		if(t.val != ls.name) Error("Loop terminator label does not match loop label"); EndScope(); 
+			this.Statements(out ls.statements);
+			this.Expect(8);
+			this.Expect(9);
+			this.Expect(30);
+			this.Expect(1);
+		if(this.t.val != ls.name)
+			{
+				this.Error("Loop terminator label does not match loop label");
+			}
+
+			this.EndScope(); 
 	}
 
 	void BreakStatement(out Statement stat) {
-		BreakStatement bs = new BreakStatement(GetPragma(la)); stat = bs; 
-		Expect(28);
-		if (la.kind == 1) {
-			Get();
-			bs.label = t.val; 
+		var bs = new BreakStatement(this.GetPragma(this.la)); stat = bs;
+			this.Expect(28);
+		if (this.la.kind == 1) {
+				this.Get();
+			bs.label = this.t.val; 
 		}
-		Expect(5);
-		SetEndPragma(stat); 
+			this.Expect(5);
+			this.SetEndPragma(stat); 
 	}
 
 	void ContinueStatement(out Statement stat) {
-		ContinueStatement cs = new ContinueStatement(GetPragma(la)); stat = cs; 
-		Expect(29);
-		if (la.kind == 1) {
-			Get();
-			cs.label = t.val; 
+		var cs = new ContinueStatement(this.GetPragma(this.la)); stat = cs;
+			this.Expect(29);
+		if (this.la.kind == 1) {
+				this.Get();
+			cs.label = this.t.val; 
 		}
-		Expect(5);
-		SetEndPragma(stat); 
+			this.Expect(5);
+			this.SetEndPragma(stat); 
 	}
 
 	void OrlyStatement(out Statement stat) {
-		ConditionalStatement cs = new ConditionalStatement(GetPragma(la));
+		var cs = new ConditionalStatement(this.GetPragma(this.la));
 		stat = cs;
-		ConditionalStatement cur = cs;
-			Expression e;
-			cs.condition = new VariableLValue(GetPragma(la), GetVariable("IT")); 
-		Expect(33);
-		Expect(34);
-		Expect(23);
-		SetEndPragma(cs); 
-		while (la.kind == 5) {
-			Get();
+		var cur = cs;
+			cs.condition = new VariableLValue(this.GetPragma(this.la), this.GetVariable("IT"));
+			this.Expect(33);
+			this.Expect(34);
+			this.Expect(23);
+			this.SetEndPragma(cs); 
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		if (la.kind == 35) {
-			Get();
-			Expect(34);
-			while (la.kind == 5) {
-				Get();
+		if (this.la.kind == 35) {
+				this.Get();
+				this.Expect(34);
+			while (this.la.kind == 5) {
+					this.Get();
 			}
 		}
-		BeginScope(); 
-		Statements(out cs.trueStatements);
-		EndScope(); 
-		while (la.kind == 36) {
-			Get();
-			cur.falseStatements = new ConditionalStatement(GetPragma(la)); 
-			Expression(out e);
-			(cur.falseStatements as ConditionalStatement).condition = e; SetEndPragma(cur.falseStatements); cur = (ConditionalStatement)cur.falseStatements; BeginScope(); 
-			while (la.kind == 5) {
-				Get();
+			this.BeginScope();
+			this.Statements(out cs.trueStatements);
+			this.EndScope(); 
+		while (this.la.kind == 36) {
+				this.Get();
+			cur.falseStatements = new ConditionalStatement(this.GetPragma(this.la));
+				this.Expression(out var e);
+			(cur.falseStatements as ConditionalStatement).condition = e; this.SetEndPragma(cur.falseStatements); cur = (ConditionalStatement)cur.falseStatements; this.BeginScope(); 
+			while (this.la.kind == 5) {
+					this.Get();
 			}
-			Statements(out cur.trueStatements);
-			EndScope(); 
+				this.Statements(out cur.trueStatements);
+				this.EndScope(); 
 		}
-		if (la.kind == 37) {
-			Get();
-			Expect(38);
-			while (la.kind == 5) {
-				Get();
+		if (this.la.kind == 37) {
+				this.Get();
+				this.Expect(38);
+			while (this.la.kind == 5) {
+					this.Get();
 			}
-			BeginScope(); 
-			Statements(out cur.falseStatements);
-			EndScope(); 
+				this.BeginScope();
+				this.Statements(out cur.falseStatements);
+				this.EndScope(); 
 		}
-		Expect(39);
+			this.Expect(39);
 	}
 
 	void SwitchStatement(out Statement stat) {
-		SwitchStatement ss = new SwitchStatement(GetPragma(la)); ss.control = new VariableLValue(GetPragma(la), GetVariable("IT")); stat = ss; Object label; Statement block; 
-		Expect(40);
-		Expect(23);
-		SetEndPragma(ss); 
-		while (la.kind == 5) {
-			Get();
+			var ss = new SwitchStatement(this.GetPragma(this.la))
+			{
+				control = new VariableLValue(this.GetPragma(this.la), this.GetVariable("IT"))
+			};
+			stat = ss;
+			this.Expect(40);
+			this.Expect(23);
+			this.SetEndPragma(ss); 
+		while (this.la.kind == 5) {
+				this.Get();
 		}
-		while (la.kind == 41) {
-			Get();
-			SwitchLabel(out label);
-			while (la.kind == 5) {
-				Get();
+		while (this.la.kind == 41) {
+				this.Get();
+				this.SwitchLabel(out var label);
+			while (this.la.kind == 5) {
+					this.Get();
 			}
-			Statements(out block);
-			AddCase(ss, label, block); 
+				this.Statements(out var block);
+				this.AddCase(ss, label, block); 
 		}
-		if (la.kind == 42) {
-			Get();
-			while (la.kind == 5) {
-				Get();
+		if (this.la.kind == 42) {
+				this.Get();
+			while (this.la.kind == 5) {
+					this.Get();
 			}
-			Statements(out ss.defaultCase);
+				this.Statements(out ss.defaultCase);
 		}
-		Expect(39);
+			this.Expect(39);
 	}
 
 	void PrintStatement(out Statement stat) {
-		PrintStatement ps = new PrintStatement(GetPragma(la)); ps.message = new FunctionExpression(GetPragma(la), GetFunction("SMOOSH")); stat = ps; Expression e;
-		if (la.kind == 43) {
-			Get();
-		} else if (la.kind == 44) {
-			Get();
-			ps.stderr = true; 
-		} else SynErr(66);
-		while (StartOf(2)) {
-			Expression(out e);
+			var ps = new PrintStatement(this.GetPragma(this.la))
+			{
+				message = new FunctionExpression(this.GetPragma(this.la), this.GetFunction("SMOOSH"))
+			};
+			stat = ps;
+			if (this.la.kind == 43)
+			{
+				this.Get();
+			}
+			else if (this.la.kind == 44)
+			{
+				this.Get();
+				ps.stderr = true;
+			}
+			else
+			{
+				this.SynErr(66);
+			}
+
+			while (this.StartOf(2)) {
+				this.Expression(out var e);
 			(ps.message as FunctionExpression).arguments.Add(e); 
 		}
-		if (la.kind == 45) {
-			Get();
+		if (this.la.kind == 45) {
+				this.Get();
 			ps.newline = false; 
 		}
-		Expect(5);
-		SetEndPragma(stat); 
+			this.Expect(5);
+			this.SetEndPragma(stat); 
 	}
 
 	void ExpressionStatement(out Statement stat) {
-		AssignmentStatement ass = new AssignmentStatement(GetPragma(la)); ass.lval = new VariableLValue(GetPragma(la), GetVariable("IT")); stat = ass; Expression exp;
-		Expression(out exp);
-		ass.rval = exp; SetEndPragma(ass); 
+			var ass = new AssignmentStatement(this.GetPragma(this.la))
+			{
+				lval = new VariableLValue(this.GetPragma(this.la), this.GetVariable("IT"))
+			};
+			stat = ass;
+			this.Expression(out var exp);
+			ass.rval = exp;
+			this.SetEndPragma(ass); 
 	}
 
 	void ReturnStatement(out Statement stat) {
-		ReturnStatement rs = new ReturnStatement(GetPragma(la)); stat = rs; 
-		Expect(62);
-		Expect(30);
-		Expression(out rs.expression);
+		var rs = new ReturnStatement(this.GetPragma(this.la)); stat = rs;
+			this.Expect(62);
+			this.Expect(30);
+			this.Expression(out rs.expression);
 	}
 
 	void Expression(out Expression exp) {
 		exp = null; 
-		if (IsFunction(la.val)) {
-			FunctionExpression(out exp);
-		} else if (la.kind == 49) {
-			TypecastExpression(out exp);
-		} else if (StartOf(3)) {
-			Unary(out exp);
-		} else SynErr(67);
-	}
+		if (this.IsFunction(this.la.val)) {
+				this.FunctionExpression(out exp);
+		} else if (this.la.kind == 49) {
+				this.TypecastExpression(out exp);
+		} else if (this.StartOf(3)) {
+				this.Unary(out exp);
+		} else
+			{
+				this.SynErr(67);
+			}
+		}
 
 	void LValue(out LValue lv) {
-		lv = null; 
-		Expect(1);
-		lv = new VariableLValue(GetPragma(t), GetVariable(t.val)); SetEndPragma(lv); 
+		lv = null;
+			this.Expect(1);
+		lv = new VariableLValue(this.GetPragma(this.t), this.GetVariable(this.t.val)); this.SetEndPragma(lv); 
 	}
 
 	void SwitchLabel(out object obj) {
 		obj = null; 
-		if (StartOf(4)) {
-			Const(out obj);
-		} else if (la.kind == 4) {
-			Get();
-			List<VariableRef> refs = new List<VariableRef>(); obj = notdot.LOLCode.StringExpression.UnescapeString(t.val, GetScope(), errors, GetPragma(t), refs); if(refs.Count > 0) Error("String constants in OMG labels cannot contain variable substitutions."); 
-		} else SynErr(68);
-	}
+		if (this.StartOf(4)) {
+				this.Const(out obj);
+		} else if (this.la.kind == 4) {
+				this.Get();
+			var refs = new List<VariableRef>(); obj = notdot.LOLCode.StringExpression.UnescapeString(this.t.val, this.GetScope(), this.errors, this.GetPragma(this.t), refs); if(refs.Count > 0)
+				{
+					this.Error("String constants in OMG labels cannot contain variable substitutions.");
+				}
+			} else
+			{
+				this.SynErr(68);
+			}
+		}
 
 	void Const(out object val) {
 		val = null; 
-		if (la.kind == 2) {
-			Get();
-			val = int.Parse(t.val); 
-		} else if (la.kind == 3) {
-			Get();
-			val = float.Parse(t.val); 
-		} else if (la.kind == 54) {
-			Get();
+		if (this.la.kind == 2) {
+				this.Get();
+			val = int.Parse(this.t.val); 
+		} else if (this.la.kind == 3) {
+				this.Get();
+			val = float.Parse(this.t.val); 
+		} else if (this.la.kind == 54) {
+				this.Get();
 			val = null; 
-		} else if (la.kind == 55) {
-			Get();
+		} else if (this.la.kind == 55) {
+				this.Get();
 			val = true; 
-		} else if (la.kind == 56) {
-			Get();
+		} else if (this.la.kind == 56) {
+				this.Get();
 			val = false; 
-		} else SynErr(69);
-	}
+		} else
+			{
+				this.SynErr(69);
+			}
+		}
 
 	void Typename(out Type t) {
 		t = typeof(void); 
-		if (la.kind == 50) {
-			Get();
+		if (this.la.kind == 50) {
+				this.Get();
 			t = typeof(bool); 
-		} else if (la.kind == 51) {
-			Get();
+		} else if (this.la.kind == 51) {
+				this.Get();
 			t = typeof(int); 
-		} else if (la.kind == 52) {
-			Get();
+		} else if (this.la.kind == 52) {
+				this.Get();
 			t = typeof(float); 
-		} else if (la.kind == 53) {
-			Get();
+		} else if (this.la.kind == 53) {
+				this.Get();
 			t = typeof(string); 
-		} else SynErr(70);
-	}
+		} else
+			{
+				this.SynErr(70);
+			}
+		}
 
 	void FunctionExpression(out Expression exp) {
-		FunctionExpression fe = new FunctionExpression(GetPragma(la)); exp = fe; Expression e2; 
-		Expect(1);
-		fe.func = GetFunction(t.val); int argsLeft = fe.func.Arity; 
-		if (la.kind == 47) {
-			Get();
+		var fe = new FunctionExpression(this.GetPragma(this.la)); exp = fe;
+			this.Expect(1);
+			fe.func = this.GetFunction(this.t.val); var argsLeft = fe.func.Arity; 
+		if (this.la.kind == 47) {
+				this.Get();
 		}
-		if ((argsLeft > 0 || (fe.func.IsVariadic && la.kind != _mkay)) && la.kind != _eos) {
-			Expression(out e2);
-			fe.arguments.Add(e2); argsLeft--; 
-			while ((argsLeft > 0 || (fe.func.IsVariadic && la.kind != _mkay)) && la.kind != _eos) {
-				if (la.kind == 48) {
-					Get();
+		if ((argsLeft > 0 || (fe.func.IsVariadic && this.la.kind != _mkay)) && this.la.kind != _eos) {
+				this.Expression(out var e2);
+				fe.arguments.Add(e2); argsLeft--; 
+			while ((argsLeft > 0 || (fe.func.IsVariadic && this.la.kind != _mkay)) && this.la.kind != _eos) {
+				if (this.la.kind == 48) {
+						this.Get();
 				}
-				Expression(out e2);
+					this.Expression(out e2);
 				fe.arguments.Add(e2); argsLeft--; 
 			}
 		}
-		if (fe.func.IsVariadic && la.kind != _eos) {
-			Expect(10);
+		if (fe.func.IsVariadic && this.la.kind != _eos) {
+				this.Expect(10);
 		}
 	}
 
 	void TypecastExpression(out Expression exp) {
-		TypecastExpression te = new TypecastExpression(GetPragma(la)); exp = te; 
-		Expect(49);
-		Expression(out te.exp);
-		if (la.kind == 20) {
-			Get();
+		var te = new TypecastExpression(this.GetPragma(this.la));
+			exp = te;
+			this.Expect(49);
+			this.Expression(out te.exp);
+		if (this.la.kind == 20) {
+				this.Get();
 		}
-		Typename(out te.destType);
-		SetEndPragma(te); 
+			this.Typename(out te.destType);
+			this.SetEndPragma(te); 
 	}
 
 	void Unary(out Expression exp) {
-		exp = null; Object val; LValue lv; 
-		if (StartOf(4)) {
-			Const(out val);
-			exp = new PrimitiveExpression(GetPragma(t), val); SetEndPragma(exp); 
-		} else if (la.kind == 4) {
-			StringExpression(out exp);
-		} else if (la.kind == 1) {
-			LValue(out lv);
-			exp = lv; SetEndPragma(exp); 
-		} else SynErr(71);
-	}
+		exp = null;
+			if (this.StartOf(4))
+			{
+				this.Const(out var val);
+				exp = new PrimitiveExpression(this.GetPragma(this.t), val);
+				this.SetEndPragma(exp);
+			}
+			else if (this.la.kind == 4)
+			{
+				this.StringExpression(out exp);
+			}
+			else if (this.la.kind == 1)
+			{
+				this.LValue(out var lv);
+				exp = lv;
+				this.SetEndPragma(exp);
+			}
+			else
+			{
+				this.SynErr(71);
+			}
+		}
 
 	void StringExpression(out Expression exp) {
-		Expect(4);
-		exp = new StringExpression(GetPragma(t), t.val, GetScope(), errors); SetEndPragma(exp); 
+			this.Expect(4);
+		exp = new StringExpression(this.GetPragma(this.t), this.t.val, this.GetScope(), this.errors); this.SetEndPragma(exp); 
 	}
 
 
 
 	public void Parse() {
-		la = new Token();
-		la.val = "";		
-		Get();
-		LOLCode();
+			this.la = new Token
+			{
+				val = ""
+			};
+			this.Get();
+			this.LOLCode();
 
-    Expect(0);
+			this.Expect(0);
 	}
 	
 	bool[,] set = {
@@ -567,12 +660,10 @@ public class Errors {
 	//public string errMsgFormat = "-- \"{0}\" line {1} col {2}: {3}"; // 0=file, 1=line, 2=column, 3=text
 
 	private CompilerErrorCollection cec;
-	
-	public Errors(CompilerErrorCollection c) {
-		this.cec = c;
-	}
-  
-	public void SynErr (string file, int line, int col, int n) {
+
+		public Errors(CompilerErrorCollection c) => this.cec = c;
+
+		public void SynErr (string file, int line, int col, int n) {
 		string s;
 		switch (n) {
 			case 0: s = "EOF expected"; break;
@@ -650,27 +741,27 @@ public class Errors {
 
 			default: s = "error " + n; break;
 		}
-		cec.Add(new CompilerError(file, line, col, n.ToString(), s));
+			this.cec.Add(new CompilerError(file, line, col, n.ToString(), s));
 	}
 
-	public void SemErr (string file, int line, int col, string s) {
-		cec.Add(new CompilerError(file, line, col, "", s));
-	}
-	
-	public void SemErr (string s) {
-		cec.Add(new CompilerError(null, 0, 0, "", s));
-	}
-	
-	public void Warning (string file, int line, int col, string s) {
-		CompilerError ce = new CompilerError(file, line, col, "", s);
-		ce.IsWarning = true;
-		cec.Add(ce);
+		public void SemErr(string file, int line, int col, string s) => this.cec.Add(new CompilerError(file, line, col, "", s));
+
+		public void SemErr(string s) => this.cec.Add(new CompilerError(null, 0, 0, "", s));
+
+		public void Warning (string file, int line, int col, string s) {
+			var ce = new CompilerError(file, line, col, "", s)
+			{
+				IsWarning = true
+			};
+			this.cec.Add(ce);
 	}
 	
 	public void Warning(string s) {
-		CompilerError ce = new CompilerError(null, 0, 0, "", s);
-		ce.IsWarning = true;
-		cec.Add(ce);
+			var ce = new CompilerError(null, 0, 0, "", s)
+			{
+				IsWarning = true
+			};
+			this.cec.Add(ce);
 	}
 } // Errors
 

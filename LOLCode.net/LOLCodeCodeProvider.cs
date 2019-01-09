@@ -12,39 +12,19 @@ namespace notdot.LOLCode
 	public class LOLCodeCodeProvider : CodeDomProvider, ICodeCompiler
 	{
 		[Obsolete]
-		public override ICodeCompiler CreateCompiler()
-		{
-			return this;
-		}
+		public override ICodeCompiler CreateCompiler() => this;
 
 		[Obsolete]
-		public override ICodeGenerator CreateGenerator()
-		{
-			throw new Exception("The method or operation is not implemented.");
-		}
+		public override ICodeGenerator CreateGenerator() => throw new Exception("The method or operation is not implemented.");
 
 		[Obsolete]
-		public override ICodeParser CreateParser()
-		{
-			throw new Exception("The method or operation is not implemented.");
-		}
+		public override ICodeParser CreateParser() => throw new Exception("The method or operation is not implemented.");
 
-		#region ICodeCompiler Members
+		public CompilerResults CompileAssemblyFromDom(CompilerParameters options, System.CodeDom.CodeCompileUnit compilationUnit) => throw new Exception("The method or operation is not implemented.");
 
-		public CompilerResults CompileAssemblyFromDom(CompilerParameters options, System.CodeDom.CodeCompileUnit compilationUnit)
-		{
-			throw new Exception("The method or operation is not implemented.");
-		}
+		public CompilerResults CompileAssemblyFromDomBatch(CompilerParameters options, System.CodeDom.CodeCompileUnit[] compilationUnits) => throw new Exception("The method or operation is not implemented.");
 
-		public CompilerResults CompileAssemblyFromDomBatch(CompilerParameters options, System.CodeDom.CodeCompileUnit[] compilationUnits)
-		{
-			throw new Exception("The method or operation is not implemented.");
-		}
-
-		public CompilerResults CompileAssemblyFromFile(CompilerParameters options, string fileName)
-		{
-			return this.CompileAssemblyFromFileBatch(options, new string[] { fileName });
-		}
+		public CompilerResults CompileAssemblyFromFile(CompilerParameters options, string fileName) => this.CompileAssemblyFromFileBatch(options, new string[] { fileName });
 
 		public CompilerResults CompileAssemblyFromFileBatch(CompilerParameters options, string[] fileNames)
 		{
@@ -57,10 +37,7 @@ namespace notdot.LOLCode
 			return this.CompileAssemblyFromStreamBatch(options, fileNames, streams);
 		}
 
-		public CompilerResults CompileAssemblyFromSource(CompilerParameters options, string source)
-		{
-			return this.CompileAssemblyFromSourceBatch(options, new string[] { source });
-		}
+		public CompilerResults CompileAssemblyFromSource(CompilerParameters options, string source) => this.CompileAssemblyFromSourceBatch(options, new string[] { source });
 
 		public CompilerResults CompileAssemblyFromSourceBatch(CompilerParameters options, string[] sources)
 		{
@@ -77,8 +54,10 @@ namespace notdot.LOLCode
 
 		private CompilerResults CompileAssemblyFromStreamBatch(CompilerParameters options, string[] filenames, Stream[] streams)
 		{
-			var name = new AssemblyName();
-			name.Name = Path.GetFileName(options.OutputAssembly);
+			var name = new AssemblyName
+			{
+				Name = Path.GetFileName(options.OutputAssembly)
+			};
 
 			var ab = Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
 
@@ -101,7 +80,7 @@ namespace notdot.LOLCode
 					throw new ArgumentException("Streams passed to CompileAssemblyFromStream[Batch] must be seekable");
 				}
 
-				var pass1 = notdot.LOLCode.Parser.Pass1.Parser.GetParser(prog, filenames[i], streams[i], ret);
+				var pass1 = LOLCode.Parser.Pass1.Parser.GetParser(prog, filenames[i], streams[i], ret);
 				pass1.Parse();
 				if (ret.Errors.HasErrors)
 				{
@@ -135,7 +114,5 @@ namespace notdot.LOLCode
 
 			return ret;
 		}
-
-		#endregion
 	}
 }

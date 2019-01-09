@@ -14,14 +14,14 @@ namespace LOLCode.net.Tests
 
         internal static string GetTestSampleFull(string sampleName)
         {
-            string resourceName = String.Format("{0}.{1}", SampleNamespace, sampleName);
+            var resourceName = String.Format("{0}.{1}", SampleNamespace, sampleName);
 
             if (!resourceCache.ContainsKey(resourceName))
             {
-                StringBuilder content = new StringBuilder();
-                Assembly thisAssembly = Assembly.GetExecutingAssembly();
+                var content = new StringBuilder();
+                var thisAssembly = Assembly.GetExecutingAssembly();
 
-                using (Stream resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
+                using (var resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
                 {
 
                     if (resourceStream == null)
@@ -43,7 +43,7 @@ namespace LOLCode.net.Tests
         internal static void WriteSampleCodeToFile(string sampleName, string file)
         {
 
-            string sampleCode = GetCodeFromSample(sampleName);
+            var sampleCode = GetCodeFromSample(sampleName);
 
             if (!File.Exists(file))
             {
@@ -55,7 +55,7 @@ namespace LOLCode.net.Tests
 
         internal static string GetCodeFromSample(string sampleName)
         {
-            string sampleContent = GetTestSampleFull(sampleName);
+            var sampleContent = GetTestSampleFull(sampleName);
 
             if (!ContainsBeginBlocks(sampleContent))
             {
@@ -63,14 +63,14 @@ namespace LOLCode.net.Tests
             }
             else
             {
-                Dictionary<string, string> blocks = GetSampleBlocks(sampleContent);
+                var blocks = GetSampleBlocks(sampleContent);
                 return blocks["code"]; 
             }
         }
 
         internal static string GetBaselineFromSample(string sampleName)
         {
-            string sampleContent = GetTestSampleFull(sampleName);
+            var sampleContent = GetTestSampleFull(sampleName);
 
             if (!ContainsBeginBlocks(sampleContent))
             {
@@ -78,34 +78,32 @@ namespace LOLCode.net.Tests
             }
             else
             {
-                Dictionary<string, string> blocks = GetSampleBlocks(sampleContent);
+                var blocks = GetSampleBlocks(sampleContent);
                 return blocks["baseline"];
             }
         }
 
-        private static bool ContainsBeginBlocks(string content)
-        {
-            // TODO: Improve this one might have LOL VALUE R "-->begin" or something
-            return content.StartsWith("-->begin ") || content.Contains("\n-->begin ");
-        }
+		private static bool ContainsBeginBlocks(string content) =>
+			 // TODO: Improve this one might have LOL VALUE R "-->begin" or something
+			 content.StartsWith("-->begin ") || content.Contains("\n-->begin ");
 
-        private static Dictionary<string, string> GetSampleBlocks(string content)
+		private static Dictionary<string, string> GetSampleBlocks(string content)
         {
-            Dictionary<string, string> blocks = new Dictionary<string, string>(); 
+            var blocks = new Dictionary<string, string>(); 
             
             // Split into lines
-            List<string> lines = new List<string>(content.Split('\n'));
+            var lines = new List<string>(content.Split('\n'));
 
             // Trim any \r
-            for (int i = 0; i < lines.Count; i++)
+            for (var i = 0; i < lines.Count; i++)
             {
                 lines[i] = lines[i].TrimEnd('\r');
             }
 
             StringBuilder currentBlock = null;
-            string currentBlockKey = string.Empty;
+            var currentBlockKey = string.Empty;
 
-            foreach (string line in lines)
+            foreach (var line in lines)
             {
                 if (line.StartsWith("-->begin "))
                 {
@@ -116,7 +114,7 @@ namespace LOLCode.net.Tests
                     }
                     currentBlock = new StringBuilder();
 
-                    string[] beginParts = line.Split(new char[] { ' ' }, 2);
+                    var beginParts = line.Split(new char[] { ' ' }, 2);
 
                     currentBlockKey = (beginParts.Length == 2 && !String.IsNullOrEmpty(beginParts[1]))
                         ? beginParts[1] : Guid.NewGuid().ToString();

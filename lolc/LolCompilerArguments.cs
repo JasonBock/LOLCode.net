@@ -51,21 +51,12 @@ namespace notdot.LOLCode.lolc
 		public string[] sources;
 #pragma warning restore CS0647
 
-		internal static bool IsTargetValid(string target)
-		{
-			return (target.ToLowerInvariant() == "exe" || target.ToLowerInvariant() == "library");
-		}
+		internal static bool IsTargetValid(string target) => (target.ToLowerInvariant() == "exe" || target.ToLowerInvariant() == "library");
 
-		internal static bool IsPlatformValid(string platform)
-		{
-			return (platform.ToLowerInvariant() == "anycpu" || platform.ToLowerInvariant() == "x86" ||
+		internal static bool IsPlatformValid(string platform) => (platform.ToLowerInvariant() == "anycpu" || platform.ToLowerInvariant() == "x86" ||
 					  platform.ToLowerInvariant() == "Itanium" || platform.ToLowerInvariant() == "x64");
-		}
 
-		internal static bool IsValidDebugType(string debugtype)
-		{
-			return (debugtype.ToLowerInvariant() == "full" || debugtype.ToLowerInvariant() == "pdbonly");
-		}
+		internal static bool IsValidDebugType(string debugtype) => (debugtype.ToLowerInvariant() == "full" || debugtype.ToLowerInvariant() == "pdbonly");
 
 		internal static bool PostValidateArguments(LolCompilerArguments arguments)
 		{

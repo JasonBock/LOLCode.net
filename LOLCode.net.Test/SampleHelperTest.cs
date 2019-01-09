@@ -12,21 +12,21 @@ namespace LOLCode.net.Tests
         [Test]
         public void GetCodeFromSampleNoBlocks()
         {
-            string value = SampleHelper.GetCodeFromSample("fulltest.lol");
+            var value = SampleHelper.GetCodeFromSample("fulltest.lol");
             Assert.IsTrue(value.Contains("BTW")); 
         }
 
         [Test]
         public void GetCodeFromSampleCodeBlock()
         {
-            string value = SampleHelper.GetCodeFromSample("visible.lol");
+            var value = SampleHelper.GetCodeFromSample("visible.lol");
             Assert.IsTrue(value.Contains("BTW")); 
         }
 
         [Test]
         public void GetBaselineFromSampleBlock()
         {
-            string value = SampleHelper.GetBaselineFromSample("visible.lol");
+            var value = SampleHelper.GetBaselineFromSample("visible.lol");
             Assert.IsTrue(value.Contains("HELLO")); 
         }
 

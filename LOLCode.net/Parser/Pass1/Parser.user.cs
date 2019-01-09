@@ -11,7 +11,7 @@ namespace notdot.LOLCode.Parser.Pass1
     internal partial class Parser
     {
         public static Parser GetParser(LOLProgram prog, string filename, Stream s, CompilerResults results) {
-            Parser p = new Parser(new Scanner(s));
+            var p = new Parser(new Scanner(s));
             p.filename = Path.GetFileName(filename);
             p.errors = new Errors(results.Errors);
             p.globals = prog.globals;
@@ -25,14 +25,22 @@ namespace notdot.LOLCode.Parser.Pass1
 
         void Error(string s)
         {
-            if (errDist >= minErrDist) errors.SemErr(filename, t.line, t.col, s);
-            errDist = 0;
+            if (this.errDist >= minErrDist)
+			{
+				this.errors.SemErr(this.filename, this.t.line, this.t.col, s);
+			}
+
+			this.errDist = 0;
         }
 
         void Warning(string s)
         {
-            if(errDist >= minErrDist) errors.Warning(filename, t.line, t.col, s);
-            errDist = 0;
+            if(this.errDist >= minErrDist)
+			{
+				this.errors.Warning(this.filename, this.t.line, this.t.col, s);
+			}
+
+			this.errDist = 0;
         }
 
     }

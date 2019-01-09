@@ -1,187 +1,203 @@
-using System.Collections.Generic;
-using System.CodeDom.Compiler;
-using System.Reflection.Emit;
-using System.Reflection;
 using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+
 namespace notdot.LOLCode
 {
-    internal enum LOLCodeVersion
-    {
-        v1_0,
-        v1_1,
-        v1_2,
-        IRCSPECZ
-    }
+	internal enum LOLCodeVersion
+	{
+		v1_0,
+		v1_1,
+		v1_2,
+		IRCSPECZ
+	}
 
-    internal class LOLProgram
-    {
-        public LOLCodeVersion version = LOLCodeVersion.v1_2;
-        public CompilerParameters compileropts;
-        public Scope globals = new Scope();
-        public Dictionary<string, LOLMethod> methods = new Dictionary<string, LOLMethod>();
-        public List<Assembly> assemblies = new List<Assembly>();
+	internal class LOLProgram
+	{
+		public LOLCodeVersion version = LOLCodeVersion.v1_2;
+		public CompilerParameters compileropts;
+		public Scope globals = new Scope();
+		public Dictionary<string, LOLMethod> methods = new Dictionary<string, LOLMethod>();
+		public List<Assembly> assemblies = new List<Assembly>();
 
-        public LOLProgram(CompilerParameters opts)
-        {
-            this.compileropts = opts;
-            
-            UserFunctionRef mainRef = new UserFunctionRef("Main", 0, false);
-            mainRef.ReturnType = typeof(void);
-            globals.AddSymbol(mainRef);
-            methods.Add("Main", new LOLMethod(mainRef, this));
+		public LOLProgram(CompilerParameters opts)
+		{
+			this.compileropts = opts;
 
-            assemblies.Add(Assembly.GetAssembly(typeof(stdlol.core)));
-            ImportLibrary("stdlol.core");
-        }
+			var mainRef = new UserFunctionRef("Main", 0, false)
+			{
+				ReturnType = typeof(void)
+			};
+			this.globals.AddSymbol(mainRef);
+			this.methods.Add("Main", new LOLMethod(mainRef, this));
 
-        public MethodInfo Emit(CompilerErrorCollection errors, ModuleBuilder mb)
-        { 
-            TypeBuilder cls = mb.DefineType(compileropts.MainClass);
+			this.assemblies.Add(Assembly.GetAssembly(typeof(stdlol.core)));
+			this.ImportLibrary("stdlol.core");
+		}
 
-            //Define methods
-            foreach (LOLMethod method in methods.Values)
-                (globals[method.info.Name] as UserFunctionRef).Builder = cls.DefineMethod(method.info.Name, MethodAttributes.Public | MethodAttributes.Static, method.info.ReturnType, method.info.ArgumentTypes);
+		public MethodInfo Emit(CompilerErrorCollection errors, ModuleBuilder mb)
+		{
+			var cls = mb.DefineType(this.compileropts.MainClass);
 
-            //Define globals
-            foreach (SymbolRef sr in globals)
-                if (sr is GlobalRef)
-                    (sr as GlobalRef).Field = cls.DefineField(sr.Name, (sr as GlobalRef).Type, FieldAttributes.Static | FieldAttributes.Public);
+			//Define methods
+			foreach (var method in this.methods.Values)
+			{
+				(this.globals[method.info.Name] as UserFunctionRef).Builder = cls.DefineMethod(method.info.Name, MethodAttributes.Public | MethodAttributes.Static, method.info.ReturnType, method.info.ArgumentTypes);
+			}
 
-            //Emit methods
-            foreach (LOLMethod method in methods.Values)
-                method.Emit(errors, (globals[method.info.Name] as UserFunctionRef).Builder);
+			//Define globals
+			foreach (var sr in this.globals)
+			{
+				if (sr is GlobalRef)
+				{
+					(sr as GlobalRef).Field = cls.DefineField(sr.Name, (sr as GlobalRef).Type, FieldAttributes.Static | FieldAttributes.Public);
+				}
+			}
 
-            //Create type
-            Type t = cls.CreateType();
+			//Emit methods
+			foreach (var method in this.methods.Values)
+			{
+				method.Emit(errors, (this.globals[method.info.Name] as UserFunctionRef).Builder);
+			}
 
-            //Return main
-            return t.GetMethod("Main");
-        }
+			//Create type
+			var t = cls.CreateType();
 
-        public static void WrapObject(Type t, ILGenerator gen)
-        {
-            if (t == typeof(int))
-            {
-                //Box the int
-                gen.Emit(OpCodes.Box, typeof(int));
-            }
-            else if (t == typeof(Dictionary<object, object>))
-            {
-                //Clone the array
-                gen.Emit(OpCodes.Newobj, typeof(Dictionary<object, object>).GetConstructor(new Type[] { typeof(Dictionary<object, object>) }));
-            }
-        }
+			//Return main
+			return t.GetMethod("Main");
+		}
 
-        public bool ImportLibrary(string name)
-        {
-            Type t = null;
-            foreach (Assembly a in assemblies)
-            {
-                t = a.GetType(name);
-                if (t != null)
-                    break;
-            }
+		public static void WrapObject(Type t, ILGenerator gen)
+		{
+			if (t == typeof(int))
+			{
+				//Box the int
+				gen.Emit(OpCodes.Box, typeof(int));
+			}
+			else if (t == typeof(Dictionary<object, object>))
+			{
+				//Clone the array
+				gen.Emit(OpCodes.Newobj, typeof(Dictionary<object, object>).GetConstructor(new Type[] { typeof(Dictionary<object, object>) }));
+			}
+		}
 
-            if (t == null)
-                return false;
+		public bool ImportLibrary(string name)
+		{
+			Type t = null;
+			foreach (var a in this.assemblies)
+			{
+				t = a.GetType(name);
+				if (t != null)
+				{
+					break;
+				}
+			}
 
-            foreach (MethodInfo mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static))
-            {
-                object[] attribs = mi.GetCustomAttributes(typeof(stdlol.LOLCodeFunctionAttribute), true);
-                for (int i = 0; i < attribs.Length; i++)
-                {
-                    stdlol.LOLCodeFunctionAttribute attrib = attribs[i] as stdlol.LOLCodeFunctionAttribute;
-                    globals.AddSymbol(new ImportFunctionRef(mi, attrib.Name != null ? attrib.Name : mi.Name));
-                }
-            }
+			if (t == null)
+			{
+				return false;
+			}
 
-            return true;
-        }
-    }
+			foreach (var mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static))
+			{
+				var attribs = mi.GetCustomAttributes(typeof(stdlol.LOLCodeFunctionAttribute), true);
+				for (var i = 0; i < attribs.Length; i++)
+				{
+					var attrib = attribs[i] as stdlol.LOLCodeFunctionAttribute;
+					this.globals.AddSymbol(new ImportFunctionRef(mi, mi.Name));
+				}
+			}
 
-    internal class LOLMethod
-    {
-        public FunctionRef info;
-        public ArgumentRef[] args;
-        public LOLProgram program;
-        public Statement statements;
-        public List<BreakableStatement> breakables = new List<BreakableStatement>();
-        public Scope locals;
-        private Dictionary<Type, Stack<LocalBuilder>> tempLocals = new Dictionary<Type, Stack<LocalBuilder>>();
+			return true;
+		}
+	}
 
-        public LOLMethod(FunctionRef info, LOLProgram prog)
-        {
-            this.info = info;
-            this.args = new ArgumentRef[info.Arity + (info.IsVariadic ? 1 : 0)];
-            this.program = prog;
-            this.locals = new Scope(prog.globals);
+	internal class LOLMethod
+	{
+		public FunctionRef info;
+		public ArgumentRef[] args;
+		public LOLProgram program;
+		public Statement statements;
+		public List<BreakableStatement> breakables = new List<BreakableStatement>();
+		public Scope locals;
+		private readonly Dictionary<Type, Stack<LocalBuilder>> tempLocals = new Dictionary<Type, Stack<LocalBuilder>>();
 
-            LocalRef it = new LocalRef("IT");
-            locals.AddSymbol(it);
-        }
+		public LOLMethod(FunctionRef info, LOLProgram prog)
+		{
+			this.info = info;
+			this.args = new ArgumentRef[info.Arity + (info.IsVariadic ? 1 : 0)];
+			this.program = prog;
+			this.locals = new Scope(prog.globals);
 
-        public void DefineLocal(ILGenerator gen, LocalRef l)
-        {
-            l.Local = gen.DeclareLocal(l.Type);
-            if (program.compileropts.IncludeDebugInformation)
-                l.Local.SetLocalSymInfo(l.Name);
-        }
+			var it = new LocalRef("IT");
+			this.locals.AddSymbol(it);
+		}
 
-        public LocalBuilder GetTempLocal(ILGenerator gen, Type t)
-        {
-            Stack<LocalBuilder> temps;
-            if (tempLocals.TryGetValue(t, out temps) && temps.Count > 0)
-            {
-                return temps.Pop();
-            }
-            else
-            {
-                return gen.DeclareLocal(t);
-            }
-        }
+		public void DefineLocal(ILGenerator gen, LocalRef l)
+		{
+			l.Local = gen.DeclareLocal(l.Type);
+			if (this.program.compileropts.IncludeDebugInformation)
+			{
+				l.Local.SetLocalSymInfo(l.Name);
+			}
+		}
 
-        public void ReleaseTempLocal(LocalBuilder lb)
-        {
-            Stack<LocalBuilder> temps;
-            if (!tempLocals.TryGetValue(lb.LocalType, out temps))
-            {
-                temps = new Stack<LocalBuilder>();
-                tempLocals.Add(lb.LocalType, temps);
-            }
+		public LocalBuilder GetTempLocal(ILGenerator gen, Type t)
+		{
+			if (this.tempLocals.TryGetValue(t, out var temps) && temps.Count > 0)
+			{
+				return temps.Pop();
+			}
+			else
+			{
+				return gen.DeclareLocal(t);
+			}
+		}
 
-            temps.Push(lb);
-        }
+		public void ReleaseTempLocal(LocalBuilder lb)
+		{
+			if (!this.tempLocals.TryGetValue(lb.LocalType, out var temps))
+			{
+				temps = new Stack<LocalBuilder>();
+				this.tempLocals.Add(lb.LocalType, temps);
+			}
 
-        public void Emit(CompilerErrorCollection errors, MethodBuilder m)
-        {
-            //Set the parameters
-            //ParameterBuilder[] parms = new ParameterInfo[args.Length];
-            for(int i = 0; i < args.Length; i++)
-                m.DefineParameter(i + 1, ParameterAttributes.None, args[i].Name);
+			temps.Push(lb);
+		}
 
-            ILGenerator gen = m.GetILGenerator();
+		public void Emit(CompilerErrorCollection errors, MethodBuilder m)
+		{
+			//Set the parameters
+			for (var i = 0; i < this.args.Length; i++)
+			{
+				m.DefineParameter(i + 1, ParameterAttributes.None, this.args[i].Name);
+			}
 
-            //Define the IT variable
-            LocalRef it = locals["IT"] as LocalRef;
-            DefineLocal(gen, it);
+			var gen = m.GetILGenerator();
 
-            statements.Process(this, errors, gen);
+			//Define the IT variable
+			var it = this.locals["IT"] as LocalRef;
+			this.DefineLocal(gen, it);
 
-            statements.Emit(this, gen);
+			this.statements.Process(this, errors, gen);
 
-            //Cast the IT variable to our return type and return it
-            if (m.ReturnType != typeof(void))
-            {
-                gen.Emit(OpCodes.Ldloc, it.Local);
-                Expression.EmitCast(gen, it.Type, m.ReturnType);
-            }
-            gen.Emit(OpCodes.Ret);
-        }
+			this.statements.Emit(this, gen);
 
-        public void SetArgumentName(short num, string name)
-        {
-            args[num] = new ArgumentRef(name, num);
-            locals.AddSymbol(args[num]);
-        }
-    }
+			//Cast the IT variable to our return type and return it
+			if (m.ReturnType != typeof(void))
+			{
+				gen.Emit(OpCodes.Ldloc, it.Local);
+				Expression.EmitCast(gen, it.Type, m.ReturnType);
+			}
+			gen.Emit(OpCodes.Ret);
+		}
+
+		public void SetArgumentName(short num, string name)
+		{
+			this.args[num] = new ArgumentRef(name, num);
+			this.locals.AddSymbol(this.args[num]);
+		}
+	}
 }

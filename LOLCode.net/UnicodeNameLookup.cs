@@ -1,36 +1,42 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
 using System.IO;
 using System.IO.Compression;
+using System.Reflection;
 
 namespace notdot.LOLCode
 {
-    internal abstract class UnicodeNameLookup
-    {
-        private static Dictionary<string, string> names = null;
+	internal abstract class UnicodeNameLookup
+	{
+		private static Dictionary<string, string> names = null;
 
-        private static void LoadDictionary()
-        {
-            names = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            BinaryReader br = new BinaryReader(new GZipStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("notdot.LOLCode.UnicodeNames.dat"), CompressionMode.Decompress));
-            
-            int count = br.ReadInt32();
-            for (int i = 0; i < count; i++)
-                names.Add(br.ReadString(), br.ReadString());
+		private static void LoadDictionary()
+		{
+			names = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+			var br = new BinaryReader(new GZipStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("notdot.LOLCode.UnicodeNames.dat"), CompressionMode.Decompress));
 
-            br.BaseStream.Close();
-        }
+			var count = br.ReadInt32();
+			for (var i = 0; i < count; i++)
+			{
+				names.Add(br.ReadString(), br.ReadString());
+			}
 
-        public static string GetUnicodeCharacter(string name)
-        {
-            if (names == null)
-                LoadDictionary();
-            string val;
-            if (!names.TryGetValue(name, out val))
-                return null;
-            return val;
-        }
-    }
+			br.BaseStream.Close();
+		}
+
+		public static string GetUnicodeCharacter(string name)
+		{
+			if (names == null)
+			{
+				LoadDictionary();
+			}
+
+			if (!names.TryGetValue(name, out var val))
+			{
+				return null;
+			}
+
+			return val;
+		}
+	}
 }

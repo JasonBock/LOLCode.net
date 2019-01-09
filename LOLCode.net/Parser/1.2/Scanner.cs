@@ -1,529 +1,648 @@
-
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
-namespace notdot.LOLCode.Parser.v1_2 {
-
-internal class Token {
-	public int kind;    // token kind
-	public int pos;     // token position in the source text (starting at 0)
-	public int col;     // token column (starting at 0)
-	public int line;    // token line (starting at 1)
-	public string val;  // token value
-	public Token next;  // ML 2005-03-11 Tokens are kept in linked list
-}
-
-//-----------------------------------------------------------------------------------
-// Buffer
-//-----------------------------------------------------------------------------------
-internal class Buffer {
-	public const int EOF = char.MaxValue + 1;
-	const int MAX_BUFFER_LENGTH = 64 * 1024; // 64KB
-	byte[] buf;         // input buffer
-	int bufStart;       // position of first byte in buffer relative to input stream
-	int bufLen;         // length of buffer
-	int fileLen;        // length of input stream
-	int pos;            // current position in buffer
-	Stream stream;      // input stream (seekable)
-	bool isUserStream;  // was the stream opened by the user?
-	
-	public Buffer (Stream s, bool isUserStream) {
-		stream = s; this.isUserStream = isUserStream;
-		fileLen = bufLen = (int) s.Length;
-		if (stream.CanSeek && bufLen > MAX_BUFFER_LENGTH) bufLen = MAX_BUFFER_LENGTH;
-		buf = new byte[bufLen];
-		bufStart = Int32.MaxValue; // nothing in the buffer so far
-		Pos = 0; // setup buffer to position 0 (start)
-		if (bufLen == fileLen) Close();
-	}
-	
-	protected Buffer(Buffer b) { // called in UTF8Buffer constructor
-		buf = b.buf;
-		bufStart = b.bufStart;
-		bufLen = b.bufLen;
-		fileLen = b.fileLen;
-		pos = b.pos;
-		stream = b.stream;
-		b.stream = null;
-		isUserStream = b.isUserStream;
+namespace notdot.LOLCode.Parser.v1_2
+{
+	internal class Token
+	{
+		public int kind;    // token kind
+		public int pos;     // token position in the source text (starting at 0)
+		public int col;     // token column (starting at 0)
+		public int line;    // token line (starting at 1)
+		public string val;  // token value
+		public Token next;  // ML 2005-03-11 Tokens are kept in linked list
 	}
 
-	~Buffer() { Close(); }
-	
-	protected void Close() {
-		if (!isUserStream && stream != null) {
-			stream.Close();
-			stream = null;
-		}
-	}
-	
-	public virtual int Read () {
-		if (pos < bufLen) {
-			return buf[pos++];
-		} else if (Pos < fileLen) {
-			Pos = Pos; // shift buffer start to Pos
-			return buf[pos++];
-		} else {
-			return EOF;
-		}
-	}
+	//-----------------------------------------------------------------------------------
+	// Buffer
+	//-----------------------------------------------------------------------------------
+	internal class Buffer
+	{
+		public const int EOF = char.MaxValue + 1;
+		const int MAX_BUFFER_LENGTH = 64 * 1024; // 64KB
+		byte[] buf;         // input buffer
+		int bufStart;       // position of first byte in buffer relative to input stream
+		int bufLen;         // length of buffer
+		int fileLen;        // length of input stream
+		int pos;            // current position in buffer
+		Stream stream;      // input stream (seekable)
+		bool isUserStream;  // was the stream opened by the user?
 
-	public int Peek () {
-		int curPos = Pos;
-		int ch = Read();
-		Pos = curPos;
-		return ch;
-	}
-	
-	public string GetString (int beg, int end) {
-		int len = end - beg;
-		char[] buf = new char[len];
-		int oldPos = Pos;
-		Pos = beg;
-		for (int i = 0; i < len; i++) buf[i] = (char) Read();
-		Pos = oldPos;
-		return new String(buf);
-	}
+		public Buffer(Stream s, bool isUserStream)
+		{
+			this.stream = s; this.isUserStream = isUserStream;
+			this.fileLen = this.bufLen = (int)s.Length;
+			if (this.stream.CanSeek && this.bufLen > MAX_BUFFER_LENGTH)
+			{
+				this.bufLen = MAX_BUFFER_LENGTH;
+			}
 
-	public int Pos {
-		get { return pos + bufStart; }
-		set {
-			if (value < 0) value = 0; 
-			else if (value > fileLen) value = fileLen;
-			if (value >= bufStart && value < bufStart + bufLen) { // already in buffer
-				pos = value - bufStart;
-			} else if (stream != null) { // must be swapped in
-				stream.Seek(value, SeekOrigin.Begin);
-				bufLen = stream.Read(buf, 0, buf.Length);
-				bufStart = value; pos = 0;
-			} else {
-				pos = fileLen - bufStart; // make Pos return fileLen
+			this.buf = new byte[this.bufLen];
+			this.bufStart = int.MaxValue; // nothing in the buffer so far
+			this.Pos = 0; // setup buffer to position 0 (start)
+			if (this.bufLen == this.fileLen)
+			{
+				this.Close();
 			}
 		}
-	}
-}
 
-//-----------------------------------------------------------------------------------
-// UTF8Buffer
-//-----------------------------------------------------------------------------------
-internal class UTF8Buffer: Buffer {
-	public UTF8Buffer(Buffer b): base(b) {}
-
-	public override int Read() {
-		int ch;
-		do {
-			ch = base.Read();
-			// until we find a uft8 start (0xxxxxxx or 11xxxxxx)
-		} while ((ch >= 128) && ((ch & 0xC0) != 0xC0) && (ch != EOF));
-		if (ch < 128 || ch == EOF) {
-			// nothing to do, first 127 chars are the same in ascii and utf8
-			// 0xxxxxxx or end of file character
-		} else if ((ch & 0xF0) == 0xF0) {
-			// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-			int c1 = ch & 0x07; ch = base.Read();
-			int c2 = ch & 0x3F; ch = base.Read();
-			int c3 = ch & 0x3F; ch = base.Read();
-			int c4 = ch & 0x3F;
-			ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
-		} else if ((ch & 0xE0) == 0xE0) {
-			// 1110xxxx 10xxxxxx 10xxxxxx
-			int c1 = ch & 0x0F; ch = base.Read();
-			int c2 = ch & 0x3F; ch = base.Read();
-			int c3 = ch & 0x3F;
-			ch = (((c1 << 6) | c2) << 6) | c3;
-		} else if ((ch & 0xC0) == 0xC0) {
-			// 110xxxxx 10xxxxxx
-			int c1 = ch & 0x1F; ch = base.Read();
-			int c2 = ch & 0x3F;
-			ch = (c1 << 6) | c2;
+		protected Buffer(Buffer b)
+		{ // called in UTF8Buffer constructor
+			this.buf = b.buf;
+			this.bufStart = b.bufStart;
+			this.bufLen = b.bufLen;
+			this.fileLen = b.fileLen;
+			this.pos = b.pos;
+			this.stream = b.stream;
+			b.stream = null;
+			this.isUserStream = b.isUserStream;
 		}
-		return ch;
-	}
-}
 
-//-----------------------------------------------------------------------------------
-// Scanner
-//-----------------------------------------------------------------------------------
-internal class Scanner {
-	const char EOL = '\n';
-	const int eofSym = 0; /* pdt */
-	const int maxT = 63;
-	const int noSym = 63;
+		~Buffer() { this.Close(); }
 
-
-	public Buffer buffer; // scanner buffer
-	
-	Token t;          // current token
-	int ch;           // current input character
-	int pos;          // byte position of current character
-	int col;          // column number of current character
-	int line;         // line number of current character
-	int oldEols;      // EOLs that appeared in a comment;
-	Dictionary<int, int> start; // maps first token character to start state
-
-	Token tokens;     // list of tokens already peeked (first token is a dummy)
-	Token pt;         // current peek token
-	
-	char[] tval = new char[128]; // text of current token
-	int tlen;         // length of current token
-	
-	public Scanner (string fileName) {
-		try {
-			Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-			buffer = new Buffer(stream, false);
-			Init();
-		} catch (IOException) {
-			throw new FatalError("Cannot open file " + fileName);
-		}
-	}
-	
-	public Scanner (Stream s) {
-		buffer = new Buffer(s, true);
-		Init();
-	}
-	
-	void Init() {
-		pos = -1; line = 1; col = 0;
-		oldEols = 0;
-		NextCh();
-		if (ch == 0xEF) { // check optional byte order mark for UTF-8
-			NextCh(); int ch1 = ch;
-			NextCh(); int ch2 = ch;
-			if (ch1 != 0xBB || ch2 != 0xBF) {
-				throw new FatalError(String.Format("illegal byte order mark: EF {0,2:X} {1,2:X}", ch1, ch2));
+		protected void Close()
+		{
+			if (!this.isUserStream && this.stream != null)
+			{
+				this.stream.Close();
+				this.stream = null;
 			}
-			buffer = new UTF8Buffer(buffer); col = 0;
-			NextCh();
-		}
-		start = new Dictionary<int, int>(128);
-		for (int i = 65; i <= 65; ++i) start[i] = 1;
-		for (int i = 67; i <= 78; ++i) start[i] = 1;
-		for (int i = 80; i <= 90; ++i) start[i] = 1;
-		for (int i = 97; i <= 122; ++i) start[i] = 1;
-		for (int i = 48; i <= 57; ++i) start[i] = 31;
-		for (int i = 10; i <= 10; ++i) start[i] = 23;
-		for (int i = 44; i <= 44; ++i) start[i] = 23;
-		start[46] = 32; 
-		start[34] = 14; 
-		start[66] = 33; 
-		start[79] = 34; 
-		start[8230] = 29; 
-		start[63] = 47; 
-		start[33] = 48; 
-		start[Buffer.EOF] = -1;
-
-		pt = tokens = new Token();  // first token is a dummy
-	}
-	
-	void NextCh() {
-		if (oldEols > 0) { ch = EOL; oldEols--; } 
-		else {
-			pos = buffer.Pos;
-			ch = buffer.Read(); col++;
-			// replace isolated '\r' by '\n' in order to make
-			// eol handling uniform across Windows, Unix and Mac
-			if (ch == '\r' && buffer.Peek() != '\n') ch = EOL;
-			if (ch == EOL) { line++; col = 0; }
 		}
 
-	}
-
-	void AddCh() {
-		if (tlen >= tval.Length) {
-			char[] newBuf = new char[2 * tval.Length];
-			Array.Copy(tval, 0, newBuf, 0, tval.Length);
-			tval = newBuf;
+		public virtual int Read()
+		{
+			if (this.pos < this.bufLen)
+			{
+				return this.buf[this.pos++];
+			}
+			else if (this.Pos < this.fileLen)
+			{
+				this.Pos = this.Pos; // shift buffer start to Pos
+				return this.buf[this.pos++];
+			}
+			else
+			{
+				return EOF;
+			}
 		}
-		tval[tlen++] = (char)ch;
-		NextCh();
-	}
 
-
-
-
-	void CheckLiteral() {
-		switch (t.val) {
-			case "CAN": t.kind = 6; break;
-			case "IN": t.kind = 7; break;
-			case "IM": t.kind = 8; break;
-			case "OUTTA": t.kind = 9; break;
-			case "MKAY": t.kind = 10; break;
-			case "R": t.kind = 11; break;
-			case "IS": t.kind = 12; break;
-			case "HOW": t.kind = 13; break;
-			case "HAI": t.kind = 14; break;
-			case "TO": t.kind = 15; break;
-			case "1.2": t.kind = 16; break;
-			case "KTHXBYE": t.kind = 17; break;
-			case "I": t.kind = 18; break;
-			case "HAS": t.kind = 19; break;
-			case "A": t.kind = 20; break;
-			case "ITZ": t.kind = 21; break;
-			case ".": t.kind = 22; break;
-			case "GIMMEH": t.kind = 24; break;
-			case "LINE": t.kind = 25; break;
-			case "WORD": t.kind = 26; break;
-			case "LETTAR": t.kind = 27; break;
-			case "GTFO": t.kind = 28; break;
-			case "MOAR": t.kind = 29; break;
-			case "YR": t.kind = 30; break;
-			case "TIL": t.kind = 31; break;
-			case "WILE": t.kind = 32; break;
-			case "O": t.kind = 33; break;
-			case "RLY": t.kind = 34; break;
-			case "YA": t.kind = 35; break;
-			case "MEBBE": t.kind = 36; break;
-			case "NO": t.kind = 37; break;
-			case "WAI": t.kind = 38; break;
-			case "OIC": t.kind = 39; break;
-			case "WTF": t.kind = 40; break;
-			case "OMG": t.kind = 41; break;
-			case "OMGWTF": t.kind = 42; break;
-			case "VISIBLE": t.kind = 43; break;
-			case "INVISIBLE": t.kind = 44; break;
-			case "NOW": t.kind = 46; break;
-			case "OF": t.kind = 47; break;
-			case "AN": t.kind = 48; break;
-			case "MAEK": t.kind = 49; break;
-			case "TROOF": t.kind = 50; break;
-			case "NUMBR": t.kind = 51; break;
-			case "NUMBAR": t.kind = 52; break;
-			case "YARN": t.kind = 53; break;
-			case "NOOB": t.kind = 54; break;
-			case "WIN": t.kind = 55; break;
-			case "FAIL": t.kind = 56; break;
-			case "DUZ": t.kind = 57; break;
-			case "IF": t.kind = 58; break;
-			case "U": t.kind = 59; break;
-			case "SAY": t.kind = 60; break;
-			case "SO": t.kind = 61; break;
-			case "FOUND": t.kind = 62; break;
-			default: break;
+		public int Peek()
+		{
+			var curPos = this.Pos;
+			var ch = this.Read();
+			this.Pos = curPos;
+			return ch;
 		}
-	}
 
-	Token NextToken() {
-		while (ch == ' ' || ch == 9 || ch == 13) NextCh();
+		public string GetString(int beg, int end)
+		{
+			var len = end - beg;
+			var buf = new char[len];
+			var oldPos = this.Pos;
+			this.Pos = beg;
+			for (var i = 0; i < len; i++)
+			{
+				buf[i] = (char)this.Read();
+			}
 
-		int apx = 0;
-		t = new Token();
-		t.pos = pos; t.col = col; t.line = line; 
-		int state;
-		try { state = start[ch]; } catch (KeyNotFoundException) { state = 0; }
-		tlen = 0; AddCh();
-		
-		switch (state) {
-			case -1: { t.kind = eofSym; break; } // NextCh already done
-			case 0: { t.kind = noSym; break; }   // NextCh already done
-			case 1:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 2:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 2;}
-				else if (ch == 'E' || ch == 'e') {AddCh(); goto case 3;}
-				else {t.kind = 3; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 3:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 5;}
-				else if (ch == '+' || ch == '-') {AddCh(); goto case 4;}
-				else {t.kind = noSym; break;}
-			case 4:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 5;}
-				else {t.kind = noSym; break;}
-			case 5:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 5;}
-				else {t.kind = 3; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 6:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 7;}
-				else {t.kind = noSym; break;}
-			case 7:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 7;}
-				else if (ch == 'E' || ch == 'e') {AddCh(); goto case 8;}
-				else {t.kind = 3; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 8:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 10;}
-				else if (ch == '+' || ch == '-') {AddCh(); goto case 9;}
-				else {t.kind = noSym; break;}
-			case 9:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 10;}
-				else {t.kind = noSym; break;}
-			case 10:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 10;}
-				else {t.kind = 3; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 11:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 13;}
-				else if (ch == '+' || ch == '-') {AddCh(); goto case 12;}
-				else {t.kind = noSym; break;}
-			case 12:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 13;}
-				else {t.kind = noSym; break;}
-			case 13:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 13;}
-				else {t.kind = 3; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 14:
-				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '!' || ch >= '#' && ch <= '9' || ch >= ';' && ch <= 65535) {AddCh(); goto case 14;}
-				else if (ch == '"') {AddCh(); goto case 22;}
-				else if (ch == ':') {AddCh(); goto case 35;}
-				else {t.kind = noSym; break;}
-			case 15:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F' || ch >= 'a' && ch <= 'f') {AddCh(); goto case 16;}
-				else {t.kind = noSym; break;}
-			case 16:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F' || ch >= 'a' && ch <= 'f') {AddCh(); goto case 36;}
-				else if (ch == ')') {AddCh(); goto case 14;}
-				else {t.kind = noSym; break;}
-			case 17:
-				if (ch == ')') {AddCh(); goto case 14;}
-				else {t.kind = noSym; break;}
-			case 18:
-				if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 19;}
-				else {t.kind = noSym; break;}
-			case 19:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 19;}
-				else if (ch == '}') {AddCh(); goto case 14;}
-				else {t.kind = noSym; break;}
-			case 20:
-				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '!' || ch >= '#' && ch <= '9' || ch >= ';' && ch <= 65535) {AddCh(); goto case 21;}
-				else {t.kind = noSym; break;}
-			case 21:
-				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '!' || ch >= '#' && ch <= '9' || ch >= ';' && ch <= 92 || ch >= '^' && ch <= 65535) {AddCh(); goto case 21;}
-				else if (ch == ']') {AddCh(); goto case 38;}
-				else {t.kind = noSym; break;}
-			case 22:
-				{t.kind = 4; break;}
-			case 23:
-				{t.kind = 5; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 24:
-				if (ch == 10) {apx++; AddCh(); goto case 25;}
-				else if (ch <= 9 || ch >= 11 && ch <= 65535) {AddCh(); goto case 24;}
-				else {t.kind = noSym; break;}
-			case 25:
+			this.Pos = oldPos;
+			return new string(buf);
+		}
+
+		public int Pos
+		{
+			get => this.pos + this.bufStart;
+			set
+			{
+				if (value < 0)
 				{
-					tlen -= apx;
-					buffer.Pos = t.pos; NextCh(); line = t.line; col = t.col;
-					for (int i = 0; i < tlen; i++) NextCh();
-					t.kind = 64; break;}
-			case 26:
-				if (ch <= 'S' || ch >= 'U' && ch <= 65535) {AddCh(); goto case 26;}
-				else if (ch == 'T') {AddCh(); goto case 39;}
-				else {t.kind = noSym; break;}
-			case 27:
-				{t.kind = 65; break;}
-			case 28:
-				if (ch == '.') {AddCh(); goto case 29;}
-				else {t.kind = noSym; break;}
-			case 29:
-				if (ch == 10) {AddCh(); goto case 30;}
-				else if (ch <= 9 || ch >= 11 && ch <= 65535) {AddCh(); goto case 29;}
-				else {t.kind = noSym; break;}
-			case 30:
-				{t.kind = 66; break;}
-			case 31:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 31;}
-				else if (ch == '.') {AddCh(); goto case 6;}
-				else if (ch == 'E' || ch == 'e') {AddCh(); goto case 11;}
-				else {t.kind = 2; break;}
-			case 32:
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 2;}
-				else if (ch == '.') {AddCh(); goto case 28;}
-				else {t.kind = 5; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 33:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'S' || ch >= 'U' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 'T') {AddCh(); goto case 40;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 34:
-				if (ch >= '0' && ch <= '9' || ch == 'A' || ch >= 'C' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 'B') {AddCh(); goto case 41;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 35:
-				if (ch == '"' || ch == ')' || ch == ':' || ch == '>' || ch == 'o') {AddCh(); goto case 14;}
-				else if (ch == '(') {AddCh(); goto case 15;}
-				else if (ch == '{') {AddCh(); goto case 18;}
-				else if (ch == '[') {AddCh(); goto case 20;}
-				else {t.kind = noSym; break;}
-			case 36:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F' || ch >= 'a' && ch <= 'f') {AddCh(); goto case 37;}
-				else if (ch == ')') {AddCh(); goto case 14;}
-				else {t.kind = noSym; break;}
-			case 37:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F' || ch >= 'a' && ch <= 'f') {AddCh(); goto case 17;}
-				else if (ch == ')') {AddCh(); goto case 14;}
-				else {t.kind = noSym; break;}
-			case 38:
-				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '!' || ch >= '#' && ch <= '9' || ch >= ';' && ch <= 65535) {AddCh(); goto case 38;}
-				else if (ch == '"') {AddCh(); goto case 22;}
-				else if (ch == ':') {AddCh(); goto case 35;}
-				else {t.kind = noSym; break;}
-			case 39:
-				if (ch <= 'K' || ch >= 'M' && ch <= 65535) {AddCh(); goto case 26;}
-				else if (ch == 'L') {AddCh(); goto case 42;}
-				else {t.kind = noSym; break;}
-			case 40:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'V' || ch >= 'X' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 'W') {AddCh(); goto case 43;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 41:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'S' || ch >= 'U' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 'T') {AddCh(); goto case 44;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 42:
-				if (ch <= 'C' || ch >= 'E' && ch <= 65535) {AddCh(); goto case 26;}
-				else if (ch == 'D') {AddCh(); goto case 45;}
-				else {t.kind = noSym; break;}
-			case 43:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 43;}
-				else if (ch == 10) {apx++; AddCh(); goto case 25;}
-				else if (ch <= 9 || ch >= 11 && ch <= '/' || ch >= ':' && ch <= '@' || ch >= '[' && ch <= '^' || ch == '`' || ch >= '{' && ch <= 65535) {AddCh(); goto case 24;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 44:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'V' || ch >= 'X' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 'W') {AddCh(); goto case 46;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 45:
-				if (ch <= 'Q' || ch >= 'S' && ch <= 65535) {AddCh(); goto case 26;}
-				else if (ch == 'R') {AddCh(); goto case 27;}
-				else {t.kind = noSym; break;}
-			case 46:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 1;}
-				else if (ch == 9 || ch >= 11 && ch <= 12 || ch == ' ') {AddCh(); goto case 26;}
-				else {t.kind = 1; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
-			case 47:
-				{t.kind = 23; break;}
-			case 48:
-				{t.kind = 45; break;}
+					value = 0;
+				}
+				else if (value > this.fileLen)
+				{
+					value = this.fileLen;
+				}
 
-		}
-		t.val = new String(tval, 0, tlen);
-		return t;
-	}
-	
-	// get the next token (possibly a token already seen during peeking)
-	public Token Scan () {
-		if (tokens.next == null) {
-			return NextToken();
-		} else {
-			pt = tokens = tokens.next;
-			return tokens;
+				if (value >= this.bufStart && value < this.bufStart + this.bufLen)
+				{ // already in buffer
+					this.pos = value - this.bufStart;
+				}
+				else if (this.stream != null)
+				{ // must be swapped in
+					this.stream.Seek(value, SeekOrigin.Begin);
+					this.bufLen = this.stream.Read(this.buf, 0, this.buf.Length);
+					this.bufStart = value; this.pos = 0;
+				}
+				else
+				{
+					this.pos = this.fileLen - this.bufStart; // make Pos return fileLen
+				}
+			}
 		}
 	}
 
-	// peek for the next token, ignore pragmas
-	public Token Peek () {
-		if (pt.next == null) {
-			do {
-				pt = pt.next = NextToken();
-			} while (pt.kind > maxT); // skip pragmas
-		} else {
-			do {
-				pt = pt.next;
-			} while (pt.kind > maxT);
-		}
-		return pt;
-	}
-	
-	// make sure that peeking starts at the current scan position
-	public void ResetPeek () { pt = tokens; }
+	//-----------------------------------------------------------------------------------
+	// UTF8Buffer
+	//-----------------------------------------------------------------------------------
+	internal class UTF8Buffer : Buffer
+	{
+		public UTF8Buffer(Buffer b) : base(b) { }
 
-} // end Scanner
+		public override int Read()
+		{
+			int ch;
+			do
+			{
+				ch = base.Read();
+				// until we find a uft8 start (0xxxxxxx or 11xxxxxx)
+			} while ((ch >= 128) && ((ch & 0xC0) != 0xC0) && (ch != EOF));
+			if (ch < 128 || ch == EOF)
+			{
+				// nothing to do, first 127 chars are the same in ascii and utf8
+				// 0xxxxxxx or end of file character
+			}
+			else if ((ch & 0xF0) == 0xF0)
+			{
+				// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+				var c1 = ch & 0x07; ch = base.Read();
+				var c2 = ch & 0x3F; ch = base.Read();
+				var c3 = ch & 0x3F; ch = base.Read();
+				var c4 = ch & 0x3F;
+				ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
+			}
+			else if ((ch & 0xE0) == 0xE0)
+			{
+				// 1110xxxx 10xxxxxx 10xxxxxx
+				var c1 = ch & 0x0F; ch = base.Read();
+				var c2 = ch & 0x3F; ch = base.Read();
+				var c3 = ch & 0x3F;
+				ch = (((c1 << 6) | c2) << 6) | c3;
+			}
+			else if ((ch & 0xC0) == 0xC0)
+			{
+				// 110xxxxx 10xxxxxx
+				var c1 = ch & 0x1F; ch = base.Read();
+				var c2 = ch & 0x3F;
+				ch = (c1 << 6) | c2;
+			}
+			return ch;
+		}
+	}
+
+	//-----------------------------------------------------------------------------------
+	// Scanner
+	//-----------------------------------------------------------------------------------
+	internal class Scanner
+	{
+		const char EOL = '\n';
+		const int eofSym = 0; /* pdt */
+		const int maxT = 63;
+		const int noSym = 63;
+
+
+		public Buffer buffer; // scanner buffer
+
+		Token t;          // current token
+		int ch;           // current input character
+		int pos;          // byte position of current character
+		int col;          // column number of current character
+		int line;         // line number of current character
+		int oldEols;      // EOLs that appeared in a comment;
+		Dictionary<int, int> start; // maps first token character to start state
+
+		Token tokens;     // list of tokens already peeked (first token is a dummy)
+		Token pt;         // current peek token
+
+		char[] tval = new char[128]; // text of current token
+		int tlen;         // length of current token
+
+		public Scanner(string fileName)
+		{
+			try
+			{
+				Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+				this.buffer = new Buffer(stream, false);
+				this.Init();
+			}
+			catch (IOException)
+			{
+				throw new FatalError("Cannot open file " + fileName);
+			}
+		}
+
+		public Scanner(Stream s)
+		{
+			this.buffer = new Buffer(s, true);
+			this.Init();
+		}
+
+		void Init()
+		{
+			this.pos = -1; this.line = 1; this.col = 0;
+			this.oldEols = 0;
+			this.NextCh();
+			if (this.ch == 0xEF)
+			{ // check optional byte order mark for UTF-8
+				this.NextCh(); var ch1 = this.ch;
+				this.NextCh(); var ch2 = this.ch;
+				if (ch1 != 0xBB || ch2 != 0xBF)
+				{
+					throw new FatalError(string.Format("illegal byte order mark: EF {0,2:X} {1,2:X}", ch1, ch2));
+				}
+				this.buffer = new UTF8Buffer(this.buffer); this.col = 0;
+				this.NextCh();
+			}
+			this.start = new Dictionary<int, int>(128);
+			for (var i = 65; i <= 65; ++i)
+			{
+				this.start[i] = 1;
+			}
+
+			for (var i = 67; i <= 78; ++i)
+			{
+				this.start[i] = 1;
+			}
+
+			for (var i = 80; i <= 90; ++i)
+			{
+				this.start[i] = 1;
+			}
+
+			for (var i = 97; i <= 122; ++i)
+			{
+				this.start[i] = 1;
+			}
+
+			for (var i = 48; i <= 57; ++i)
+			{
+				this.start[i] = 31;
+			}
+
+			for (var i = 10; i <= 10; ++i)
+			{
+				this.start[i] = 23;
+			}
+
+			for (var i = 44; i <= 44; ++i)
+			{
+				this.start[i] = 23;
+			}
+
+			this.start[46] = 32;
+			this.start[34] = 14;
+			this.start[66] = 33;
+			this.start[79] = 34;
+			this.start[8230] = 29;
+			this.start[63] = 47;
+			this.start[33] = 48;
+			this.start[Buffer.EOF] = -1;
+
+			this.pt = this.tokens = new Token();  // first token is a dummy
+		}
+
+		void NextCh()
+		{
+			if (this.oldEols > 0) { this.ch = EOL; this.oldEols--; }
+			else
+			{
+				this.pos = this.buffer.Pos;
+				this.ch = this.buffer.Read(); this.col++;
+				// replace isolated '\r' by '\n' in order to make
+				// eol handling uniform across Windows, Unix and Mac
+				if (this.ch == '\r' && this.buffer.Peek() != '\n')
+				{
+					this.ch = EOL;
+				}
+
+				if (this.ch == EOL) { this.line++; this.col = 0; }
+			}
+
+		}
+
+		void AddCh()
+		{
+			if (this.tlen >= this.tval.Length)
+			{
+				var newBuf = new char[2 * this.tval.Length];
+				Array.Copy(this.tval, 0, newBuf, 0, this.tval.Length);
+				this.tval = newBuf;
+			}
+			this.tval[this.tlen++] = (char)this.ch;
+			this.NextCh();
+		}
+
+
+
+
+		void CheckLiteral()
+		{
+			switch (this.t.val)
+			{
+				case "CAN": this.t.kind = 6; break;
+				case "IN": this.t.kind = 7; break;
+				case "IM": this.t.kind = 8; break;
+				case "OUTTA": this.t.kind = 9; break;
+				case "MKAY": this.t.kind = 10; break;
+				case "R": this.t.kind = 11; break;
+				case "IS": this.t.kind = 12; break;
+				case "HOW": this.t.kind = 13; break;
+				case "HAI": this.t.kind = 14; break;
+				case "TO": this.t.kind = 15; break;
+				case "1.2": this.t.kind = 16; break;
+				case "KTHXBYE": this.t.kind = 17; break;
+				case "I": this.t.kind = 18; break;
+				case "HAS": this.t.kind = 19; break;
+				case "A": this.t.kind = 20; break;
+				case "ITZ": this.t.kind = 21; break;
+				case ".": this.t.kind = 22; break;
+				case "GIMMEH": this.t.kind = 24; break;
+				case "LINE": this.t.kind = 25; break;
+				case "WORD": this.t.kind = 26; break;
+				case "LETTAR": this.t.kind = 27; break;
+				case "GTFO": this.t.kind = 28; break;
+				case "MOAR": this.t.kind = 29; break;
+				case "YR": this.t.kind = 30; break;
+				case "TIL": this.t.kind = 31; break;
+				case "WILE": this.t.kind = 32; break;
+				case "O": this.t.kind = 33; break;
+				case "RLY": this.t.kind = 34; break;
+				case "YA": this.t.kind = 35; break;
+				case "MEBBE": this.t.kind = 36; break;
+				case "NO": this.t.kind = 37; break;
+				case "WAI": this.t.kind = 38; break;
+				case "OIC": this.t.kind = 39; break;
+				case "WTF": this.t.kind = 40; break;
+				case "OMG": this.t.kind = 41; break;
+				case "OMGWTF": this.t.kind = 42; break;
+				case "VISIBLE": this.t.kind = 43; break;
+				case "INVISIBLE": this.t.kind = 44; break;
+				case "NOW": this.t.kind = 46; break;
+				case "OF": this.t.kind = 47; break;
+				case "AN": this.t.kind = 48; break;
+				case "MAEK": this.t.kind = 49; break;
+				case "TROOF": this.t.kind = 50; break;
+				case "NUMBR": this.t.kind = 51; break;
+				case "NUMBAR": this.t.kind = 52; break;
+				case "YARN": this.t.kind = 53; break;
+				case "NOOB": this.t.kind = 54; break;
+				case "WIN": this.t.kind = 55; break;
+				case "FAIL": this.t.kind = 56; break;
+				case "DUZ": this.t.kind = 57; break;
+				case "IF": this.t.kind = 58; break;
+				case "U": this.t.kind = 59; break;
+				case "SAY": this.t.kind = 60; break;
+				case "SO": this.t.kind = 61; break;
+				case "FOUND": this.t.kind = 62; break;
+				default: break;
+			}
+		}
+
+		Token NextToken()
+		{
+			while (this.ch == ' ' || this.ch == 9 || this.ch == 13)
+			{
+				this.NextCh();
+			}
+
+			var apx = 0;
+			this.t = new Token
+			{
+				pos = this.pos,
+				col = this.col,
+				line = this.line
+			};
+			int state;
+			try { state = this.start[this.ch]; } catch (KeyNotFoundException) { state = 0; }
+			this.tlen = 0; this.AddCh();
+
+			switch (state)
+			{
+				case -1: { this.t.kind = eofSym; break; } // NextCh already done
+				case 0: { this.t.kind = noSym; break; }   // NextCh already done
+				case 1:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 2:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 2; }
+					else if (this.ch == 'E' || this.ch == 'e') { this.AddCh(); goto case 3; }
+					else { this.t.kind = 3; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 3:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 5; }
+					else if (this.ch == '+' || this.ch == '-') { this.AddCh(); goto case 4; }
+					else { this.t.kind = noSym; break; }
+				case 4:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 5; }
+					else { this.t.kind = noSym; break; }
+				case 5:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 5; }
+					else { this.t.kind = 3; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 6:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 7; }
+					else { this.t.kind = noSym; break; }
+				case 7:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 7; }
+					else if (this.ch == 'E' || this.ch == 'e') { this.AddCh(); goto case 8; }
+					else { this.t.kind = 3; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 8:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 10; }
+					else if (this.ch == '+' || this.ch == '-') { this.AddCh(); goto case 9; }
+					else { this.t.kind = noSym; break; }
+				case 9:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 10; }
+					else { this.t.kind = noSym; break; }
+				case 10:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 10; }
+					else { this.t.kind = 3; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 11:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 13; }
+					else if (this.ch == '+' || this.ch == '-') { this.AddCh(); goto case 12; }
+					else { this.t.kind = noSym; break; }
+				case 12:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 13; }
+					else { this.t.kind = noSym; break; }
+				case 13:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 13; }
+					else { this.t.kind = 3; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 14:
+					if (this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= '!' || this.ch >= '#' && this.ch <= '9' || this.ch >= ';' && this.ch <= 65535) { this.AddCh(); goto case 14; }
+					else if (this.ch == '"') { this.AddCh(); goto case 22; }
+					else if (this.ch == ':') { this.AddCh(); goto case 35; }
+					else { this.t.kind = noSym; break; }
+				case 15:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'F' || this.ch >= 'a' && this.ch <= 'f') { this.AddCh(); goto case 16; }
+					else { this.t.kind = noSym; break; }
+				case 16:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'F' || this.ch >= 'a' && this.ch <= 'f') { this.AddCh(); goto case 36; }
+					else if (this.ch == ')') { this.AddCh(); goto case 14; }
+					else { this.t.kind = noSym; break; }
+				case 17:
+					if (this.ch == ')') { this.AddCh(); goto case 14; }
+					else { this.t.kind = noSym; break; }
+				case 18:
+					if (this.ch >= 'A' && this.ch <= 'Z' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 19; }
+					else { this.t.kind = noSym; break; }
+				case 19:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 19; }
+					else if (this.ch == '}') { this.AddCh(); goto case 14; }
+					else { this.t.kind = noSym; break; }
+				case 20:
+					if (this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= '!' || this.ch >= '#' && this.ch <= '9' || this.ch >= ';' && this.ch <= 65535) { this.AddCh(); goto case 21; }
+					else { this.t.kind = noSym; break; }
+				case 21:
+					if (this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= '!' || this.ch >= '#' && this.ch <= '9' || this.ch >= ';' && this.ch <= 92 || this.ch >= '^' && this.ch <= 65535) { this.AddCh(); goto case 21; }
+					else if (this.ch == ']') { this.AddCh(); goto case 38; }
+					else { this.t.kind = noSym; break; }
+				case 22:
+					{ this.t.kind = 4; break; }
+				case 23:
+					{ this.t.kind = 5; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 24:
+					if (this.ch == 10) { apx++; this.AddCh(); goto case 25; }
+					else if (this.ch <= 9 || this.ch >= 11 && this.ch <= 65535) { this.AddCh(); goto case 24; }
+					else { this.t.kind = noSym; break; }
+				case 25:
+					{
+						this.tlen -= apx;
+						this.buffer.Pos = this.t.pos; this.NextCh(); this.line = this.t.line; this.col = this.t.col;
+						for (var i = 0; i < this.tlen; i++)
+						{
+							this.NextCh();
+						}
+
+						this.t.kind = 64; break;
+					}
+				case 26:
+					if (this.ch <= 'S' || this.ch >= 'U' && this.ch <= 65535) { this.AddCh(); goto case 26; }
+					else if (this.ch == 'T') { this.AddCh(); goto case 39; }
+					else { this.t.kind = noSym; break; }
+				case 27:
+					{ this.t.kind = 65; break; }
+				case 28:
+					if (this.ch == '.') { this.AddCh(); goto case 29; }
+					else { this.t.kind = noSym; break; }
+				case 29:
+					if (this.ch == 10) { this.AddCh(); goto case 30; }
+					else if (this.ch <= 9 || this.ch >= 11 && this.ch <= 65535) { this.AddCh(); goto case 29; }
+					else { this.t.kind = noSym; break; }
+				case 30:
+					{ this.t.kind = 66; break; }
+				case 31:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 31; }
+					else if (this.ch == '.') { this.AddCh(); goto case 6; }
+					else if (this.ch == 'E' || this.ch == 'e') { this.AddCh(); goto case 11; }
+					else { this.t.kind = 2; break; }
+				case 32:
+					if (this.ch >= '0' && this.ch <= '9') { this.AddCh(); goto case 2; }
+					else if (this.ch == '.') { this.AddCh(); goto case 28; }
+					else { this.t.kind = 5; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 33:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'S' || this.ch >= 'U' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 'T') { this.AddCh(); goto case 40; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 34:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch == 'A' || this.ch >= 'C' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 'B') { this.AddCh(); goto case 41; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 35:
+					if (this.ch == '"' || this.ch == ')' || this.ch == ':' || this.ch == '>' || this.ch == 'o') { this.AddCh(); goto case 14; }
+					else if (this.ch == '(') { this.AddCh(); goto case 15; }
+					else if (this.ch == '{') { this.AddCh(); goto case 18; }
+					else if (this.ch == '[') { this.AddCh(); goto case 20; }
+					else { this.t.kind = noSym; break; }
+				case 36:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'F' || this.ch >= 'a' && this.ch <= 'f') { this.AddCh(); goto case 37; }
+					else if (this.ch == ')') { this.AddCh(); goto case 14; }
+					else { this.t.kind = noSym; break; }
+				case 37:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'F' || this.ch >= 'a' && this.ch <= 'f') { this.AddCh(); goto case 17; }
+					else if (this.ch == ')') { this.AddCh(); goto case 14; }
+					else { this.t.kind = noSym; break; }
+				case 38:
+					if (this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= '!' || this.ch >= '#' && this.ch <= '9' || this.ch >= ';' && this.ch <= 65535) { this.AddCh(); goto case 38; }
+					else if (this.ch == '"') { this.AddCh(); goto case 22; }
+					else if (this.ch == ':') { this.AddCh(); goto case 35; }
+					else { this.t.kind = noSym; break; }
+				case 39:
+					if (this.ch <= 'K' || this.ch >= 'M' && this.ch <= 65535) { this.AddCh(); goto case 26; }
+					else if (this.ch == 'L') { this.AddCh(); goto case 42; }
+					else { this.t.kind = noSym; break; }
+				case 40:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'V' || this.ch >= 'X' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 'W') { this.AddCh(); goto case 43; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 41:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'S' || this.ch >= 'U' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 'T') { this.AddCh(); goto case 44; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 42:
+					if (this.ch <= 'C' || this.ch >= 'E' && this.ch <= 65535) { this.AddCh(); goto case 26; }
+					else if (this.ch == 'D') { this.AddCh(); goto case 45; }
+					else { this.t.kind = noSym; break; }
+				case 43:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 43; }
+					else if (this.ch == 10) { apx++; this.AddCh(); goto case 25; }
+					else if (this.ch <= 9 || this.ch >= 11 && this.ch <= '/' || this.ch >= ':' && this.ch <= '@' || this.ch >= '[' && this.ch <= '^' || this.ch == '`' || this.ch >= '{' && this.ch <= 65535) { this.AddCh(); goto case 24; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 44:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'V' || this.ch >= 'X' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 'W') { this.AddCh(); goto case 46; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 45:
+					if (this.ch <= 'Q' || this.ch >= 'S' && this.ch <= 65535) { this.AddCh(); goto case 26; }
+					else if (this.ch == 'R') { this.AddCh(); goto case 27; }
+					else { this.t.kind = noSym; break; }
+				case 46:
+					if (this.ch >= '0' && this.ch <= '9' || this.ch >= 'A' && this.ch <= 'Z' || this.ch == '_' || this.ch >= 'a' && this.ch <= 'z') { this.AddCh(); goto case 1; }
+					else if (this.ch == 9 || this.ch >= 11 && this.ch <= 12 || this.ch == ' ') { this.AddCh(); goto case 26; }
+					else { this.t.kind = 1; this.t.val = new string(this.tval, 0, this.tlen); this.CheckLiteral(); return this.t; }
+				case 47:
+					{ this.t.kind = 23; break; }
+				case 48:
+					{ this.t.kind = 45; break; }
+
+			}
+			this.t.val = new string(this.tval, 0, this.tlen);
+			return this.t;
+		}
+
+		// get the next token (possibly a token already seen during peeking)
+		public Token Scan()
+		{
+			if (this.tokens.next == null)
+			{
+				return this.NextToken();
+			}
+			else
+			{
+				this.pt = this.tokens = this.tokens.next;
+				return this.tokens;
+			}
+		}
+
+		// peek for the next token, ignore pragmas
+		public Token Peek()
+		{
+			if (this.pt.next == null)
+			{
+				do
+				{
+					this.pt = this.pt.next = this.NextToken();
+				} while (this.pt.kind > maxT); // skip pragmas
+			}
+			else
+			{
+				do
+				{
+					this.pt = this.pt.next;
+				} while (this.pt.kind > maxT);
+			}
+			return this.pt;
+		}
+
+		// make sure that peeking starts at the current scan position
+		public void ResetPeek() => this.pt = this.tokens;
+
+	} // end Scanner
 
 }
