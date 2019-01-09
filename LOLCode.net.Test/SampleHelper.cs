@@ -1,137 +1,136 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
 using System.IO;
-using System.Text.RegularExpressions; 
+using System.Reflection;
+using System.Text;
 
 namespace LOLCode.net.Tests
 {
-    internal static class SampleHelper
-    {
-        private static Dictionary<string, string> resourceCache = new Dictionary<string, string>(); 
-        private static string SampleNamespace = "LOLCode.net.Tests.Samples"; 
+	internal static class SampleHelper
+	{
+		private static Dictionary<string, string> resourceCache = new Dictionary<string, string>();
+		private static readonly string SampleNamespace = "LOLCode.net.Tests.Samples";
 
-        internal static string GetTestSampleFull(string sampleName)
-        {
-            var resourceName = String.Format("{0}.{1}", SampleNamespace, sampleName);
+		internal static string GetTestSampleFull(string sampleName)
+		{
+			var resourceName = string.Format("{0}.{1}", SampleNamespace, sampleName);
 
-            if (!resourceCache.ContainsKey(resourceName))
-            {
-                var content = new StringBuilder();
-                var thisAssembly = Assembly.GetExecutingAssembly();
+			if (!resourceCache.ContainsKey(resourceName))
+			{
+				var content = new StringBuilder();
+				var thisAssembly = Assembly.GetExecutingAssembly();
 
-                using (var resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
-                {
+				using (var resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
+				{
 
-                    if (resourceStream == null)
-                    {
-                        throw new ArgumentException(String.Format("Unable to locate embedded resource \"{0}\"", resourceName));
-                    }
+					if (resourceStream == null)
+					{
+						throw new ArgumentException(string.Format("Unable to locate embedded resource \"{0}\"", resourceName));
+					}
 
-                    using (TextReader reader = new StreamReader(resourceStream))
-                    {
-                        content.Append(reader.ReadToEnd());
-                    }
-                }
-                resourceCache.Add(resourceName, content.ToString());
-            }
+					using (TextReader reader = new StreamReader(resourceStream))
+					{
+						content.Append(reader.ReadToEnd());
+					}
+				}
+				resourceCache.Add(resourceName, content.ToString());
+			}
 
-            return resourceCache[resourceName];
-        }
+			return resourceCache[resourceName];
+		}
 
-        internal static void WriteSampleCodeToFile(string sampleName, string file)
-        {
+		internal static void WriteSampleCodeToFile(string sampleName, string file)
+		{
 
-            var sampleCode = GetCodeFromSample(sampleName);
+			var sampleCode = GetCodeFromSample(sampleName);
 
-            if (!File.Exists(file))
-            {
-                File.Delete(file); 
-            }
+			if (!File.Exists(file))
+			{
+				File.Delete(file);
+			}
 
-            File.WriteAllText(file, sampleCode); 
-        }
+			File.WriteAllText(file, sampleCode);
+		}
 
-        internal static string GetCodeFromSample(string sampleName)
-        {
-            var sampleContent = GetTestSampleFull(sampleName);
+		internal static string GetCodeFromSample(string sampleName)
+		{
+			var sampleContent = GetTestSampleFull(sampleName);
 
-            if (!ContainsBeginBlocks(sampleContent))
-            {
-                return sampleContent;
-            }
-            else
-            {
-                var blocks = GetSampleBlocks(sampleContent);
-                return blocks["code"]; 
-            }
-        }
+			if (!ContainsBeginBlocks(sampleContent))
+			{
+				return sampleContent;
+			}
+			else
+			{
+				var blocks = GetSampleBlocks(sampleContent);
+				return blocks["code"];
+			}
+		}
 
-        internal static string GetBaselineFromSample(string sampleName)
-        {
-            var sampleContent = GetTestSampleFull(sampleName);
+		internal static string GetBaselineFromSample(string sampleName)
+		{
+			var sampleContent = GetTestSampleFull(sampleName);
 
-            if (!ContainsBeginBlocks(sampleContent))
-            {
-                return string.Empty;
-            }
-            else
-            {
-                var blocks = GetSampleBlocks(sampleContent);
-                return blocks["baseline"];
-            }
-        }
+			if (!ContainsBeginBlocks(sampleContent))
+			{
+				return string.Empty;
+			}
+			else
+			{
+				var blocks = GetSampleBlocks(sampleContent);
+				return blocks["baseline"];
+			}
+		}
 
 		private static bool ContainsBeginBlocks(string content) =>
 			 // TODO: Improve this one might have LOL VALUE R "-->begin" or something
 			 content.StartsWith("-->begin ") || content.Contains("\n-->begin ");
 
 		private static Dictionary<string, string> GetSampleBlocks(string content)
-        {
-            var blocks = new Dictionary<string, string>(); 
-            
-            // Split into lines
-            var lines = new List<string>(content.Split('\n'));
+		{
+			var blocks = new Dictionary<string, string>();
 
-            // Trim any \r
-            for (var i = 0; i < lines.Count; i++)
-            {
-                lines[i] = lines[i].TrimEnd('\r');
-            }
+			// Split into lines
+			var lines = new List<string>(content.Split('\n'));
 
-            StringBuilder currentBlock = null;
-            var currentBlockKey = string.Empty;
+			// Trim any \r
+			for (var i = 0; i < lines.Count; i++)
+			{
+				lines[i] = lines[i].TrimEnd('\r');
+			}
 
-            foreach (var line in lines)
-            {
-                if (line.StartsWith("-->begin "))
-                {
-                    if (!String.IsNullOrEmpty(currentBlockKey))
-                    {
-                        // Place current block content into the dictionary
-                        blocks.Add(currentBlockKey, currentBlock.ToString());
-                    }
-                    currentBlock = new StringBuilder();
+			StringBuilder currentBlock = null;
+			var currentBlockKey = string.Empty;
 
-                    var beginParts = line.Split(new char[] { ' ' }, 2);
+			foreach (var line in lines)
+			{
+				if (line.StartsWith("-->begin "))
+				{
+					if (!string.IsNullOrEmpty(currentBlockKey))
+					{
+						// Place current block content into the dictionary
+						blocks.Add(currentBlockKey, currentBlock.ToString());
+					}
+					currentBlock = new StringBuilder();
 
-                    currentBlockKey = (beginParts.Length == 2 && !String.IsNullOrEmpty(beginParts[1]))
-                        ? beginParts[1] : Guid.NewGuid().ToString();
-                }
-                else
-                {
-                    currentBlock.AppendLine(line); 
-                }
-            }
+					var beginParts = line.Split(new char[] { ' ' }, 2);
 
-            if (!blocks.ContainsKey(currentBlockKey) && !String.IsNullOrEmpty(currentBlockKey) && currentBlock != null)
-            {
-                blocks.Add(currentBlockKey, currentBlock.ToString()); 
-            }
+					currentBlockKey = (beginParts.Length == 2 && !string.IsNullOrEmpty(beginParts[1]))
+						 ? beginParts[1] : Guid.NewGuid().ToString();
+				}
+				else
+				{
+					currentBlock.AppendLine(line);
+				}
+			}
 
-            return blocks; 
-        }
+			if (!blocks.ContainsKey(currentBlockKey) && !string.IsNullOrEmpty(currentBlockKey) && currentBlock != null)
+			{
+				blocks.Add(currentBlockKey, currentBlock.ToString());
+			}
 
-    }
+			return blocks;
+		}
+
+	}
 }
