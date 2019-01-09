@@ -1,15 +1,11 @@
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Text;
-
 using System;
 using System.CodeDom.Compiler;
 
-namespace notdot.LOLCode.Parser.v1_2 {
-
-
-
-internal partial class Parser {
+namespace notdot.LOLCode.Parser.v1_2
+{
+	internal partial class Parser {
 	const int _EOF = 0;
 	const int _ident = 1;
 	const int _intCon = 2;
@@ -323,7 +319,11 @@ internal partial class Parser {
 	}
 
 	void OrlyStatement(out Statement stat) {
-		ConditionalStatement cs = new ConditionalStatement(GetPragma(la)); stat = cs; ConditionalStatement cur = cs; Statement st; Expression e; cs.condition = new VariableLValue(GetPragma(la), GetVariable("IT")); 
+		ConditionalStatement cs = new ConditionalStatement(GetPragma(la));
+		stat = cs;
+		ConditionalStatement cur = cs;
+			Expression e;
+			cs.condition = new VariableLValue(GetPragma(la), GetVariable("IT")); 
 		Expect(33);
 		Expect(34);
 		Expect(23);
