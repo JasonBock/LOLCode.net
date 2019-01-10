@@ -21,8 +21,4 @@
     <EmbeddedResource Include="UnicodeNames.dat" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\stdlol\stdlol.csproj" />
-  </ItemGroup>
-
 </Project>

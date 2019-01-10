@@ -33,7 +33,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LOLCode.net\LOLCode.net.csproj" />
-    <ProjectReference Include="..\stdlol\stdlol.csproj" />
   </ItemGroup>
 
 </Project>
