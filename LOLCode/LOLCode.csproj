@@ -10,12 +10,14 @@
     <RepositoryUrl>https://github.com/JasonBock/LOLCode.net</RepositoryUrl>
     <Authors>Nick Johnson and Jason Bock</Authors>
     <Description>Contains the LOLCode compiler code.</Description>
+    <AssemblyName>LOLCode</AssemblyName>
+    <RootNamespace>LOLCode</RootNamespace>
     <AssemblyVersion>0.1.0</AssemblyVersion>
     <FileVersion>0.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LOLCode.net\LOLCode.net.csproj" />
+    <ProjectReference Include="..\LOLCode.Compiler\LOLCode.Compiler.csproj" />
   </ItemGroup>
 
   <ItemGroup>

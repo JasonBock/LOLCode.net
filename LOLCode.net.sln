@@ -1,13 +1,12 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOLCode.net", "LOLCode.net\LOLCode.net.csproj", "{FA696149-9CFD-4F15-BA1E-FE27B397C786}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOLCode.Compiler", "LOLCode.Compiler\LOLCode.Compiler.csproj", "{FA696149-9CFD-4F15-BA1E-FE27B397C786}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lolc", "lolc\lolc.csproj", "{9725297F-3529-474D-9BF3-38723D79CFA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOLCode.Compiler.Tests", "LOLCode.Compiler.Tests\LOLCode.Compiler.Tests.csproj", "{802FD245-9785-441B-AF3F-248F4DBBBDC3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOLCode.net.Test", "LOLCode.net.Test\LOLCode.net.Test.csproj", "{802FD245-9785-441B-AF3F-248F4DBBBDC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOLCode", "LOLCode\LOLCode.csproj", "{9725297F-3529-474D-9BF3-38723D79CFA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

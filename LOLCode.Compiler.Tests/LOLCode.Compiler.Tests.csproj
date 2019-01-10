@@ -4,8 +4,8 @@
     <TargetFramework>net471</TargetFramework>
     <DebugType>Full</DebugType>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>LOLCode.net.Tests</AssemblyName>
-    <RootNamespace>LOLCode.net.Tests</RootNamespace>
+    <AssemblyName>LOLCode.Compiler.Tests</AssemblyName>
+    <RootNamespace>LOLCode.Compiler.Tests</RootNamespace>
     <Version>0.1.0</Version>
     <Copyright>Copyright © 2018</Copyright>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LOLCode.net\LOLCode.net.csproj" />
+    <ProjectReference Include="..\LOLCode.Compiler\LOLCode.Compiler.csproj" />
   </ItemGroup>
 
 </Project>
