@@ -44,7 +44,8 @@ namespace LOLCode.Compiler
 			//Define methods
 			foreach (var method in this.methods.Values)
 			{
-				(this.globals[method.info.Name] as UserFunctionRef).Builder = cls.DefineMethod(method.info.Name, MethodAttributes.Public | MethodAttributes.Static, method.info.ReturnType, method.info.ArgumentTypes);
+				(this.globals[method.info.Name] as UserFunctionRef).Builder = 
+					cls.DefineMethod(method.info.Name, MethodAttributes.Public | MethodAttributes.Static, method.info.ReturnType, method.info.ArgumentTypes);
 			}
 
 			//Define globals

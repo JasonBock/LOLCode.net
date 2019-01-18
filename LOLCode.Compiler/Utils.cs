@@ -5,10 +5,6 @@ using System.Text;
 
 namespace LOLCode.Compiler
 {
-	// TODO
-	// BEWARE!! Do NOT delete code from here!!!!!
-	// There's Reflection code that looks for methods
-	// based on string names. Have to clean that up later.
 	public abstract class Utils
 	{
 		public static string ReadWord(TextReader reader)
@@ -20,7 +16,7 @@ namespace LOLCode.Compiler
 				c = reader.Read();
 				if (c == -1)
 				{
-					return "";
+					return string.Empty;
 				}
 
 				if (!char.IsWhiteSpace((char)c))
@@ -59,7 +55,7 @@ namespace LOLCode.Compiler
 				return false;
 			}
 
-			if (b is string && ((string)b) == "")
+			if (b is string && ((string)b) == string.Empty)
 			{
 				return false;
 			}
@@ -109,7 +105,7 @@ namespace LOLCode.Compiler
 				return val;
 			}
 
-			throw new InvalidCastException(string.Format("Cannot cast type \"{0}\" to NUMBR", obj.GetType().Name));
+			throw new InvalidCastException($"Cannot cast type \"{obj.GetType().Name}\" to NUMBR");
 		}
 
 		public static float ToFloat(object obj)
@@ -139,7 +135,7 @@ namespace LOLCode.Compiler
 				return val;
 			}
 
-			throw new InvalidCastException(string.Format("Cannot cast type \"{0}\" to NUMBAR", obj.GetType().Name));
+			throw new InvalidCastException($"Cannot cast type \"{obj.GetType().Name}\" to NUMBAR");
 		}
 
 		public static void PrintObject(TextWriter writer, object obj, bool newline)

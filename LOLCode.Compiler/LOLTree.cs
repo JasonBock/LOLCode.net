@@ -152,41 +152,16 @@ namespace LOLCode.Compiler
 		{
 			if (this.var is LocalRef)
 			{
-				if (t == typeof(Dictionary<object, object>))
-				{
-					gen.Emit(OpCodes.Ldloca, (this.var as LocalRef).Local);
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
-				}
-				else
-				{
-					gen.Emit(OpCodes.Ldloc, (this.var as LocalRef).Local);
-				}
+				gen.Emit(OpCodes.Ldloc, (this.var as LocalRef).Local);
 			}
 			else if (this.var is GlobalRef)
 			{
-				if (t == typeof(Dictionary<object, object>))
-				{
-					gen.Emit(OpCodes.Ldnull);
-					gen.Emit(OpCodes.Ldflda, (this.var as GlobalRef).Field);
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
-				}
-				else
-				{
-					gen.Emit(OpCodes.Ldnull);
-					gen.Emit(OpCodes.Ldfld, (this.var as GlobalRef).Field);
-				}
+				gen.Emit(OpCodes.Ldnull);
+				gen.Emit(OpCodes.Ldfld, (this.var as GlobalRef).Field);
 			}
 			else if (this.var is ArgumentRef)
 			{
-				if (t == typeof(Dictionary<object, object>))
-				{
-					gen.Emit(OpCodes.Ldarga, (this.var as ArgumentRef).Number);
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
-				}
-				else
-				{
-					gen.Emit(OpCodes.Ldarg, (this.var as ArgumentRef).Number);
-				}
+				gen.Emit(OpCodes.Ldarg, (this.var as ArgumentRef).Number);
 			}
 			else
 			{
@@ -196,17 +171,12 @@ namespace LOLCode.Compiler
 			Expression.EmitCast(gen, this.var.Type, t);
 		}
 
-		public override void StartSet(LOLMethod lm, Type t, ILGenerator gen)
-		{
-			//Nothing to do
-		}
+		public override void StartSet(LOLMethod lm, Type t, ILGenerator gen) { }
 
 		public override void EndSet(LOLMethod lm, Type t, ILGenerator gen)
 		{
-			//LOLProgram.WrapObject(t, gen);
 			Expression.EmitCast(gen, t, this.var.Type);
 
-			//Store it
 			if (this.var is LocalRef)
 			{
 				gen.Emit(OpCodes.Stloc, (this.var as LocalRef).Local);
@@ -243,7 +213,6 @@ namespace LOLCode.Compiler
 		{
 			this.location.MarkSequencePoint(gen);
 
-			this.lval.StartSet(lm, this.rval.EvaluationType, gen);
 			this.rval.Emit(lm, this.rval.EvaluationType, gen);
 			this.lval.EndSet(lm, this.rval.EvaluationType, gen);
 		}
@@ -675,7 +644,8 @@ namespace LOLCode.Compiler
 			this.EmitSwitchTree(lm, gen, 0, this.sortedCases.Length, loc, delegate (ILGenerator ig, Case c)
 				{
 					ig.Emit(OpCodes.Ldstr, (string)c.name);
-					ig.EmitCall(OpCodes.Call, typeof(string).GetMethod("Compare", BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(string), typeof(string) }, null), null);
+					ig.EmitCall(OpCodes.Call, typeof(string).GetMethod(nameof(string.Compare),
+						BindingFlags.Public | BindingFlags.Static, null, new Type[] { typeof(string), typeof(string) }, null), null);
 				});
 			lm.ReleaseTempLocal(loc);
 		}
@@ -861,8 +831,6 @@ namespace LOLCode.Compiler
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
 			this.location.MarkSequencePoint(gen);
-
-			this.dest.StartSet(lm, typeof(string), gen);
 
 			gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty(nameof(Console.In), BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
 
