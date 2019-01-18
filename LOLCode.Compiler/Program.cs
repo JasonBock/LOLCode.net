@@ -1,11 +1,12 @@
 using LOLCode.Compiler;
+using notdot.LOLCode;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace notdot.LOLCode
+namespace LOLCode.Compiler
 {
 	internal enum LOLCodeVersion
 	{
