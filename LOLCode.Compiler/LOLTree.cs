@@ -82,28 +82,28 @@ namespace LOLCode.Compiler
 			{
 				if (to == typeof(int))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToInt", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.ToInt), BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(float))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToFloat", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.ToFloat), BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(string))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToString", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.ToString), BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(bool))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToBool", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.ToBool), BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else
 				{
-					throw new InvalidOperationException(string.Format("Unknown cast: From {0} to {1}", from.Name, to.Name));
+					throw new InvalidOperationException($"Unknown cast: From {from.Name} to {to.Name}");
 				}
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Unknown cast: From {0} to {1}", from.Name, to.Name));
+				throw new InvalidOperationException($"Unknown cast: From {from.Name} to {to.Name}");
 			}
 		}
 	}
@@ -822,7 +822,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty("Out", BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
+				gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty(nameof(Console.Out), BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
 			}
 
 			//Get the message
@@ -838,7 +838,7 @@ namespace LOLCode.Compiler
 				gen.Emit(OpCodes.Ldc_I4_0);
 			}
 
-			gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("PrintObject"), null);
+			gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.PrintObject)), null);
 		}
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => this.message.Process(lm, errors, gen);
@@ -864,19 +864,19 @@ namespace LOLCode.Compiler
 
 			this.dest.StartSet(lm, typeof(string), gen);
 
-			gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty("In", BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
+			gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty(nameof(Console.In), BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
 
 			switch (this.amount)
 			{
 				case IOAmount.Letter:
-					gen.EmitCall(OpCodes.Callvirt, typeof(TextReader).GetMethod("Read", new Type[0]), null);
-					gen.EmitCall(OpCodes.Call, typeof(char).GetMethod("ToString", new Type[] { typeof(char) }), null);
+					gen.EmitCall(OpCodes.Callvirt, typeof(TextReader).GetMethod(nameof(TextReader.Read), new Type[0]), null);
+					gen.EmitCall(OpCodes.Call, typeof(char).GetMethod(nameof(char.ToString), new Type[] { typeof(char) }), null);
 					break;
 				case IOAmount.Word:
-					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ReadWord"), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod(nameof(Utils.ReadWord)), null);
 					break;
 				case IOAmount.Line:
-					gen.EmitCall(OpCodes.Callvirt, typeof(TextReader).GetMethod("ReadLine", new Type[0]), null);
+					gen.EmitCall(OpCodes.Callvirt, typeof(TextReader).GetMethod(nameof(TextReader.ReadLine), new Type[0]), null);
 					break;
 			}
 
@@ -1086,7 +1086,7 @@ namespace LOLCode.Compiler
 					gen.Emit(OpCodes.Stelem, this.vars[i].EvaluationType);
 				}
 
-				gen.EmitCall(OpCodes.Call, typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object[]) }), null);
+				gen.EmitCall(OpCodes.Call, typeof(string).GetMethod(nameof(string.Format), new Type[] { typeof(string), typeof(object[]) }), null);
 			}
 		}
 

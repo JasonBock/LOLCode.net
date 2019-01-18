@@ -44,7 +44,7 @@ namespace LOLCode.Compiler
 
 		public static bool ToBool(object b)
 		{
-			if (b == null)
+			if (b is null)
 			{
 				return false;
 			}
@@ -74,7 +74,7 @@ namespace LOLCode.Compiler
 
 		public static string ToString(object obj)
 		{
-			if (obj == null)
+			if (obj is null)
 			{
 				throw new InvalidCastException("Cannot cast NOOB to string");
 			}
