@@ -3,6 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
+using LC = LOLCode.Compiler;
 
 namespace notdot.LOLCode.Parser.v1_2
 {
@@ -618,7 +619,8 @@ namespace notdot.LOLCode.Parser.v1_2
 			else if (this.la.kind == 4)
 			{
 				this.Get();
-				var refs = new List<VariableRef>(); obj = notdot.LOLCode.StringExpression.UnescapeString(this.t.val, this.GetScope(), this.errors, this.GetPragma(this.t), refs);
+				var refs = new List<VariableRef>();
+				obj = LC.StringExpression.UnescapeString(this.t.val, this.GetScope(), this.errors, this.GetPragma(this.t), refs);
 				if (refs.Count > 0)
 				{
 					this.Error("String constants in OMG labels cannot contain variable substitutions.");

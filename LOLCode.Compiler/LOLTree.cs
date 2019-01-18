@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace notdot.LOLCode
+namespace LOLCode.Compiler
 {
 	internal class CodePragma
 	{

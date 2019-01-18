@@ -1,4 +1,3 @@
-using LOLCode.Compiler;
 using notdot.LOLCode;
 using System;
 using System.CodeDom.Compiler;
