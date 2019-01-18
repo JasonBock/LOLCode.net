@@ -1,4 +1,5 @@
 using LOLCode.Compiler;
+using LOLCode.Compiler.Emitter;
 using LOLCode.Compiler.Symbols;
 using System.CodeDom.Compiler;
 using System.IO;

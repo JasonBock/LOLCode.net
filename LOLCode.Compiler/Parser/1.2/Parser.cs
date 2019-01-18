@@ -1,3 +1,4 @@
+using LOLCode.Compiler.Emitter;
 using LOLCode.Compiler.Symbols;
 using LOLCode.Compiler.Syntax;
 using System;
@@ -197,7 +198,7 @@ namespace LOLCode.Compiler.Parser.v1_2
 			this.Expect(23);
 			if (!this.program.ImportLibrary(sb.ToString()))
 			{
-				this.Error(string.Format("Library \"{0}\" not found.", sb.ToString()));
+				this.Error($"Library \"{sb.ToString()}\" not found.");
 			}
 		}
 

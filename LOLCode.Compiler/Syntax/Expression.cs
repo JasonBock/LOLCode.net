@@ -1,10 +1,12 @@
-﻿using System;
+﻿using LOLCode.Compiler.Emitter;
+using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
-	internal abstract class Expression : Statement
+	internal abstract class Expression 
+		: Statement
 	{
 		public abstract Type EvaluationType { get; }
 

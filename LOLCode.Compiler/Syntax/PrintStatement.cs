@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LOLCode.Compiler.Emitter;
+using System;
 using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -19,7 +20,7 @@ namespace LOLCode.Compiler.Syntax
 			//Get the appropriate stream
 			if (this.stderr)
 			{
-				gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty("Error", BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
+				gen.EmitCall(OpCodes.Call, typeof(Console).GetProperty(nameof(Console.Error), BindingFlags.Public | BindingFlags.Static).GetGetMethod(), null);
 			}
 			else
 			{

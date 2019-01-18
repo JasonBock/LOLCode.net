@@ -1,4 +1,5 @@
-﻿using LOLCode.Compiler.Symbols;
+﻿using LOLCode.Compiler.Emitter;
+using LOLCode.Compiler.Symbols;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;

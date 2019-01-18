@@ -1,9 +1,11 @@
-﻿using System.CodeDom.Compiler;
+﻿using LOLCode.Compiler.Emitter;
+using System.CodeDom.Compiler;
 using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
-	internal class BreakStatement : Statement
+	internal class BreakStatement 
+		: Statement
 	{
 		public string label = null;
 		private int breakIdx = -1;

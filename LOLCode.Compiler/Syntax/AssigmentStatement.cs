@@ -1,4 +1,5 @@
-﻿using System.CodeDom.Compiler;
+﻿using LOLCode.Compiler.Emitter;
+using System.CodeDom.Compiler;
 using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
