@@ -1,11 +1,10 @@
-using LOLCode.Compiler;
 using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Reflection.Emit;
 
-namespace notdot.LOLCode.Parser.v1_2
+namespace LOLCode.Compiler.Parser.v1_2
 {
 	internal partial class Parser
 	{

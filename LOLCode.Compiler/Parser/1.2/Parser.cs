@@ -1,11 +1,10 @@
-using LOLCode.Compiler;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
 using LC = LOLCode.Compiler;
 
-namespace notdot.LOLCode.Parser.v1_2
+namespace LOLCode.Compiler.Parser.v1_2
 {
 	internal partial class Parser
 	{

@@ -1,4 +1,3 @@
-using notdot.LOLCode;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -34,8 +33,8 @@ namespace LOLCode.Compiler
 			this.globals.AddSymbol(mainRef);
 			this.methods.Add("Main", new LOLMethod(mainRef, this));
 
-			this.assemblies.Add(Assembly.GetAssembly(typeof(core)));
-			this.ImportLibrary("LOLCode.Compiler.core");
+			this.assemblies.Add(Assembly.GetAssembly(typeof(Core)));
+			this.ImportLibrary($"{typeof(Core).Namespace}.{nameof(Core)}");
 		}
 
 		public MethodInfo Emit(CompilerErrorCollection errors, ModuleBuilder mb)

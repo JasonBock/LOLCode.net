@@ -2,7 +2,7 @@ using LOLCode.Compiler;
 using System.CodeDom.Compiler;
 using System.IO;
 
-namespace notdot.LOLCode.Parser.Pass1
+namespace LOLCode.Compiler.Parser.Pass1
 {
 	internal partial class Parser
 	{

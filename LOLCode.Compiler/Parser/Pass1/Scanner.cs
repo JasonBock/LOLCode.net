@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace notdot.LOLCode.Parser.Pass1
+namespace LOLCode.Compiler.Parser.Pass1
 {
 
 	internal class Token

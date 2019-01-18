@@ -1,5 +1,4 @@
-using LOLCode.Compiler;
-using notdot.LOLCode.Parser.v1_2;
+using LOLCode.Compiler.Parser.v1_2;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;

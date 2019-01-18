@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace notdot.LOLCode.Parser.v1_2
+namespace LOLCode.Compiler.Parser.v1_2
 {
 	internal class Token
 	{

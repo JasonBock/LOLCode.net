@@ -2,7 +2,7 @@ using System;
 
 namespace LOLCode.Compiler
 {
-	public abstract class core
+	public abstract class Core
 	{
 		private static object FromString(string a)
 		{

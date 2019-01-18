@@ -1,13 +1,8 @@
-
-using LOLCode.Compiler;
 using System;
 using System.CodeDom.Compiler;
 
-namespace notdot.LOLCode.Parser.Pass1
+namespace LOLCode.Compiler.Parser.Pass1
 {
-
-
-
 	internal partial class Parser
 	{
 		const int _EOF = 0;
