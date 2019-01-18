@@ -34,8 +34,8 @@ namespace LOLCode.Compiler
 			this.globals.AddSymbol(mainRef);
 			this.methods.Add("Main", new LOLMethod(mainRef, this));
 
-			this.assemblies.Add(Assembly.GetAssembly(typeof(stdlol.core)));
-			this.ImportLibrary("stdlol.core");
+			this.assemblies.Add(Assembly.GetAssembly(typeof(core)));
+			this.ImportLibrary("LOLCode.Compiler.core");
 		}
 
 		public MethodInfo Emit(CompilerErrorCollection errors, ModuleBuilder mb)

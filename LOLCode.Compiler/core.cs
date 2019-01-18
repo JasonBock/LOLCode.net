@@ -1,7 +1,6 @@
-using LOLCode.Compiler;
 using System;
 
-namespace stdlol
+namespace LOLCode.Compiler
 {
 	public abstract class core
 	{
