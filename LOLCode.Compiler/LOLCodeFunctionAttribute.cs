@@ -1,6 +1,6 @@
 using System;
 
-namespace stdlol
+namespace LOLCode.Compiler
 {
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 	public sealed class LOLCodeFunctionAttribute : Attribute { }

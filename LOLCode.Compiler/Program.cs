@@ -103,10 +103,10 @@ namespace LOLCode.Compiler
 
 			foreach (var mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static))
 			{
-				var attribs = mi.GetCustomAttributes(typeof(stdlol.LOLCodeFunctionAttribute), true);
+				var attribs = mi.GetCustomAttributes(typeof(LOLCodeFunctionAttribute), true);
 				for (var i = 0; i < attribs.Length; i++)
 				{
-					var attrib = attribs[i] as stdlol.LOLCodeFunctionAttribute;
+					var attrib = attribs[i] as LOLCodeFunctionAttribute;
 					this.globals.AddSymbol(new ImportFunctionRef(mi, mi.Name));
 				}
 			}

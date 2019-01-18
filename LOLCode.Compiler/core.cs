@@ -1,3 +1,4 @@
+using LOLCode.Compiler;
 using System;
 
 namespace stdlol
