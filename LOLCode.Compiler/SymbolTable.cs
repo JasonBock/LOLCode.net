@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace notdot.LOLCode
+namespace LOLCode.Compiler
 {
 	internal abstract class SymbolRef
 	{

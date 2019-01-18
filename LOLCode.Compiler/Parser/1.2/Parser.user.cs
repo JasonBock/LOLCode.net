@@ -1,3 +1,4 @@
+using LOLCode.Compiler;
 using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics.SymbolStore;
@@ -98,8 +99,6 @@ namespace notdot.LOLCode.Parser.v1_2
 			VariableRef ret;
 			if (this.currentMethod == null)
 			{
-				/*ret = new GlobalRef(name);
-				program.globals.AddSymbol(ret);*/
 				ret = new LocalRef(name);
 				this.main.locals.AddSymbol(ret);
 			}
