@@ -1,3 +1,4 @@
+using LOLCode.Compiler;
 using NUnit.Framework;
 using stdlol;
 using System;

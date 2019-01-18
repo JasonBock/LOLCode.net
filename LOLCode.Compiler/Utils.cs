@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace stdlol
+namespace LOLCode.Compiler
 {
+	// TODO
+	// BEWARE!! Do NOT delete code from here!!!!!
+	// There's Reflection code that looks for methods
+	// based on string names. Have to clean that up later.
 	public abstract class Utils
 	{
 		public static string ReadWord(TextReader reader)

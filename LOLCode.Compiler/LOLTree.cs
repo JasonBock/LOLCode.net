@@ -1,3 +1,4 @@
+using LOLCode.Compiler;
 using notdot.LOLCode.Parser.v1_2;
 using System;
 using System.CodeDom.Compiler;
@@ -82,19 +83,19 @@ namespace notdot.LOLCode
 			{
 				if (to == typeof(int))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToInt", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToInt", BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(float))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToFloat", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToFloat", BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(string))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToString", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToString", BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else if (to == typeof(bool))
 				{
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToBool", BindingFlags.Public | BindingFlags.Static), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToBool", BindingFlags.Public | BindingFlags.Static), null);
 				}
 				else
 				{
@@ -155,7 +156,7 @@ namespace notdot.LOLCode
 				if (t == typeof(Dictionary<object, object>))
 				{
 					gen.Emit(OpCodes.Ldloca, (this.var as LocalRef).Local);
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToDict"), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
 				}
 				else
 				{
@@ -168,7 +169,7 @@ namespace notdot.LOLCode
 				{
 					gen.Emit(OpCodes.Ldnull);
 					gen.Emit(OpCodes.Ldflda, (this.var as GlobalRef).Field);
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToDict"), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
 				}
 				else
 				{
@@ -181,7 +182,7 @@ namespace notdot.LOLCode
 				if (t == typeof(Dictionary<object, object>))
 				{
 					gen.Emit(OpCodes.Ldarga, (this.var as ArgumentRef).Number);
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ToDict"), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ToDict"), null);
 				}
 				else
 				{
@@ -838,7 +839,7 @@ namespace notdot.LOLCode
 				gen.Emit(OpCodes.Ldc_I4_0);
 			}
 
-			gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("PrintObject"), null);
+			gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("PrintObject"), null);
 		}
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => this.message.Process(lm, errors, gen);
@@ -873,7 +874,7 @@ namespace notdot.LOLCode
 					gen.EmitCall(OpCodes.Call, typeof(char).GetMethod("ToString", new Type[] { typeof(char) }), null);
 					break;
 				case IOAmount.Word:
-					gen.EmitCall(OpCodes.Call, typeof(stdlol.Utils).GetMethod("ReadWord"), null);
+					gen.EmitCall(OpCodes.Call, typeof(Utils).GetMethod("ReadWord"), null);
 					break;
 				case IOAmount.Line:
 					gen.EmitCall(OpCodes.Callvirt, typeof(TextReader).GetMethod("ReadLine", new Type[0]), null);
