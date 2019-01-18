@@ -8,7 +8,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 
-namespace notdot.LOLCode
+namespace LOLCode.Compiler
 {
 	public class LOLCodeCodeProvider : CodeDomProvider, ICodeCompiler
 	{
@@ -81,7 +81,7 @@ namespace notdot.LOLCode
 					throw new ArgumentException("Streams passed to CompileAssemblyFromStream[Batch] must be seekable");
 				}
 
-				var pass1 = LOLCode.Parser.Pass1.Parser.GetParser(prog, filenames[i], streams[i], ret);
+				var pass1 = notdot.LOLCode.Parser.Pass1.Parser.GetParser(prog, filenames[i], streams[i], ret);
 				pass1.Parse();
 				if (ret.Errors.HasErrors)
 				{
@@ -90,7 +90,7 @@ namespace notdot.LOLCode
 
 				streams[i].Seek(0, SeekOrigin.Begin);
 
-				var p = LOLCode.Parser.v1_2.Parser.GetParser(mb, prog, filenames[i], streams[i], ret);
+				var p = notdot.LOLCode.Parser.v1_2.Parser.GetParser(mb, prog, filenames[i], streams[i], ret);
 				p.Parse();
 				if (ret.Errors.HasErrors)
 				{
