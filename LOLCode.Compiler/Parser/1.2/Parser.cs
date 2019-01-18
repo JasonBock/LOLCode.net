@@ -1,3 +1,4 @@
+using LOLCode.Compiler.Symbols;
 using LOLCode.Compiler.Syntax;
 using System;
 using System.CodeDom.Compiler;
