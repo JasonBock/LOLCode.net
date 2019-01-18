@@ -2,7 +2,7 @@ using System;
 
 namespace LOLCode.Compiler
 {
-	public abstract class Core
+	public static class Core
 	{
 		private static object FromString(string a)
 		{
@@ -47,7 +47,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -152,7 +152,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -187,7 +187,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -216,7 +216,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -245,7 +245,7 @@ namespace LOLCode.Compiler
 			}
 			else
 			{
-				throw new InvalidOperationException(string.Format("Cannot add types \"{0}\" and \"{1}\"", a.GetType(), b.GetType()));
+				throw new InvalidOperationException($"Cannot add types \"{a.GetType()}\" and \"{b.GetType()}\"");
 			}
 		}
 
@@ -338,7 +338,7 @@ namespace LOLCode.Compiler
 				return (float)a + 1;
 			}
 
-			throw new ArgumentException(string.Format("Cannot call UPPIN on value of type {0}", a.GetType().Name));
+			throw new ArgumentException($"Cannot call UPPIN on value of type {a.GetType().Name}");
 		}
 
 		[LOLCodeFunction]
@@ -359,7 +359,7 @@ namespace LOLCode.Compiler
 				return (float)a - 1;
 			}
 
-			throw new ArgumentException(string.Format("Cannot call NERFIN on value of type {0}", a.GetType().Name));
+			throw new ArgumentException($"Cannot call NERFIN on value of type {a.GetType().Name}");
 		}
 	}
 }

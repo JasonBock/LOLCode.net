@@ -1,8 +1,9 @@
+using LOLCode.Compiler.Syntax;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
-using LC = LOLCode.Compiler;
+using LCS = LOLCode.Compiler.Syntax;
 
 namespace LOLCode.Compiler.Parser.v1_2
 {
@@ -619,7 +620,7 @@ namespace LOLCode.Compiler.Parser.v1_2
 			{
 				this.Get();
 				var refs = new List<VariableRef>();
-				obj = LC.StringExpression.UnescapeString(this.t.val, this.GetScope(), this.errors, this.GetPragma(this.t), refs);
+				obj = LCS.StringExpression.UnescapeString(this.t.val, this.GetScope(), this.errors, this.GetPragma(this.t), refs);
 				if (refs.Count > 0)
 				{
 					this.Error("String constants in OMG labels cannot contain variable substitutions.");
