@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework; 
 
-namespace LOLCode.net.Tests
+namespace LOLCode.Compiler.Tests
 {
     [TestFixture]    
     public class SampleHelperTest

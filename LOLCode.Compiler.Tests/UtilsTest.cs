@@ -1,9 +1,8 @@
-using LOLCode.Compiler;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace LOLCode.net.Tests.stdlol
+namespace LOLCode.Compiler.Tests
 {
 	[TestFixture]
 	public class UtilsTest

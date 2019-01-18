@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace LOLCode.net.Tests.Runtime
+namespace LOLCode.Compiler.Tests.Runtime
 {
 	internal class RuntimeTestHelper
 	{

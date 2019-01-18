@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace LOLCode.net.Tests.Runtime
+namespace LOLCode.Compiler.Tests.Runtime
 {
 	[TestFixture]
 	public class SimpleRuntimeTest

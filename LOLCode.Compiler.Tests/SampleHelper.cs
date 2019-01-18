@@ -4,12 +4,14 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace LOLCode.net.Tests
+namespace LOLCode.Compiler.Tests
 {
 	internal static class SampleHelper
 	{
 		private static Dictionary<string, string> resourceCache = new Dictionary<string, string>();
-		private static readonly string SampleNamespace = "LOLCode.net.Tests.Samples";
+		// TODO
+		// This seems dangerous, this hardcoded namespace and class name.
+		private static readonly string SampleNamespace = "LOLCode.Compiler.Tests.Samples";
 
 		internal static string GetTestSampleFull(string sampleName)
 		{
