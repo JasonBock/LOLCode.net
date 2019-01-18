@@ -3,7 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.IO;
 
-namespace notdot.LOLCode.lolc
+namespace LOLCode
 {
 	class Program
 	{
@@ -11,7 +11,7 @@ namespace notdot.LOLCode.lolc
 		{
 			var arguments = new LolCompilerArguments();
 
-			if (!CommandLine.Parser.ParseArgumentsWithUsage(args, arguments))
+			if (!Parser.ParseArgumentsWithUsage(args, arguments))
 			{
 				return 2;
 			}

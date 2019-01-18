@@ -1,8 +1,7 @@
-using CommandLine;
 using System;
 using System.IO;
 
-namespace notdot.LOLCode.lolc
+namespace LOLCode
 {
 	/// <summary>
 	/// Command line arguments for the compiler
