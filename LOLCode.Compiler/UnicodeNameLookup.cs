@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 
-namespace notdot.LOLCode
+namespace LOLCode.Compiler
 {
 	internal abstract class UnicodeNameLookup
 	{
@@ -13,7 +13,7 @@ namespace notdot.LOLCode
 		private static void LoadDictionary()
 		{
 			names = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-			var br = new BinaryReader(new GZipStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("notdot.LOLCode.UnicodeNames.dat"), CompressionMode.Decompress));
+			var br = new BinaryReader(new GZipStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("LOLCode.Compiler.UnicodeNames.dat"), CompressionMode.Decompress));
 
 			var count = br.ReadInt32();
 			for (var i = 0; i < count; i++)
