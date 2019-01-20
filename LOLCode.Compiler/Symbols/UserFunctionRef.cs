@@ -4,9 +4,11 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Symbols
 {
+	// TODO: should be sealed
 	internal class UserFunctionRef 
 		: FunctionRef
 	{
+		// TODO: Shoudl be readonly
 		public MethodBuilder Builder;
 
 		public override MethodInfo Method => this.Builder;

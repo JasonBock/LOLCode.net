@@ -2,9 +2,11 @@
 
 namespace LOLCode.Compiler.Symbols
 {
-	internal class LocalRef 
+	// TODO: Should be sealed.
+	internal class LocalRef
 		: VariableRef
 	{
+		// TODO: Should be readonly property
 		public LocalBuilder Local;
 
 		public LocalRef(string name)

@@ -4,11 +4,16 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Should be sealed
 	internal class AssignmentStatement 
 		: Statement
 	{
+		// TODO: These should be readonly properties
 		public LValue lval;
 		public Expression rval;
+
+		public AssignmentStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -23,7 +28,5 @@ namespace LOLCode.Compiler.Syntax
 			this.lval.Process(lm, errors, gen);
 			this.rval.Process(lm, errors, gen);
 		}
-
-		public AssignmentStatement(CodePragma loc) : base(loc) { }
 	}
 }

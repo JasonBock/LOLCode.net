@@ -1,5 +1,7 @@
 ﻿namespace LOLCode.Compiler.Parser
 {
+	// TODO: This should really be an immutable type,
+	// and arguably (maybe) a struct (readonly).
 	internal class Token
 	{
 		public int kind;    // token kind
