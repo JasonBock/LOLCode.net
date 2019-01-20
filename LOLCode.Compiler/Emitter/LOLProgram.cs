@@ -9,6 +9,7 @@ namespace LOLCode.Compiler.Emitter
 {
 	internal class LOLProgram
 	{
+		private const string MainFunction = "Main";
 		public LOLCodeVersion version = LOLCodeVersion.v1_2;
 		public CompilerParameters compileropts;
 		public Scope globals = new Scope();
@@ -19,12 +20,12 @@ namespace LOLCode.Compiler.Emitter
 		{
 			this.compileropts = opts;
 
-			var mainRef = new UserFunctionRef("Main", 0, false)
+			var mainRef = new UserFunctionRef(LOLProgram.MainFunction, 0, false)
 			{
 				ReturnType = typeof(void)
 			};
 			this.globals.AddSymbol(mainRef);
-			this.methods.Add("Main", new LOLMethod(mainRef, this));
+			this.methods.Add(LOLProgram.MainFunction, new LOLMethod(mainRef, this));
 
 			this.assemblies.Add(Assembly.GetAssembly(typeof(Core)));
 			this.ImportLibrary($"{typeof(Core).Namespace}.{nameof(Core)}");
@@ -60,7 +61,7 @@ namespace LOLCode.Compiler.Emitter
 			var t = cls.CreateType();
 
 			//Return main
-			return t.GetMethod("Main");
+			return t.GetMethod(LOLProgram.MainFunction);
 		}
 
 		public static void WrapObject(Type t, ILGenerator gen)
