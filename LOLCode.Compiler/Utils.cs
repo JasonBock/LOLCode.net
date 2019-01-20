@@ -72,6 +72,8 @@ namespace LOLCode.Compiler
 		{
 			if (obj is null)
 			{
+				// TODO: 
+				// Arguably this should throw ArgumentNullException
 				throw new InvalidCastException("Cannot cast NOOB to string");
 			}
 
