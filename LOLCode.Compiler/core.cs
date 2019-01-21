@@ -2,6 +2,12 @@ using System;
 
 namespace LOLCode.Compiler
 {
+	// NOTE/TODO:
+	// DO NOT REMOVE THIS CODE.
+	// in LOLProgram.ImportLibrary(), that code imports all the functions here
+	// that are public and static and have the LOLCodeFunction attribute.
+	// I wonder if there's a better way to do this to make the
+	// references more explicit.
 	public static class Core
 	{
 		private static object FromString(string a)

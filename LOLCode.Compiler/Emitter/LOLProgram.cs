@@ -95,6 +95,8 @@ namespace LOLCode.Compiler.Emitter
 				return false;
 			}
 
+			// TODO: I think this can be improved slightly with GetCustomAttributesData
+			// along with a couple of other tweaks.
 			foreach (var mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static))
 			{
 				var attribs = mi.GetCustomAttributes(typeof(LOLCodeFunctionAttribute), true);
