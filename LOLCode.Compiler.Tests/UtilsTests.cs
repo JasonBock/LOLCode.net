@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace LOLCode.Compiler.Tests
 {
@@ -8,6 +10,33 @@ namespace LOLCode.Compiler.Tests
 		private sealed class ToStringTest
 		{
 			public override string ToString() => "42";
+		}
+
+		[Test]
+		public static void ReadWordWithNoContent()
+		{
+			using (var reader = new StringReader(string.Empty))
+			{
+				Assert.That(Utils.ReadWord(reader), Is.EqualTo(string.Empty));
+			}
+		}
+
+		[Test]
+		public static void ReadWordWithOnlyWhitespace()
+		{
+			using (var reader = new StringReader(" "))
+			{
+				Assert.That(Utils.ReadWord(reader), Is.EqualTo(string.Empty));
+			}
+		}
+
+		[Test]
+		public static void ReadWordWithContent()
+		{
+			using (var reader = new StringReader("abc"))
+			{
+				Assert.That(Utils.ReadWord(reader), Is.EqualTo("979899"));
+			}
 		}
 
 		[Test]
@@ -101,7 +130,85 @@ namespace LOLCode.Compiler.Tests
 			Assert.That(Utils.ToBool(false), Is.EqualTo(false));
 
 		[Test]
-		public static void ToBoolWithTrueValue() =>
+		public static void ToBoolWithTrue() =>
 			Assert.That(Utils.ToBool(Guid.NewGuid()), Is.EqualTo(true));
+
+		[Test]
+		public static void ToFloatWithInt() =>
+			Assert.That(Utils.ToFloat(1), Is.EqualTo(1f));
+
+		[Test]
+		public static void ToFloatWithFloat() =>
+			Assert.That(Utils.ToFloat(1.1f), Is.EqualTo(1.1f));
+
+		[Test]
+		public static void ToFloatWithTrueBool() =>
+			Assert.That(Utils.ToFloat(true), Is.EqualTo(1f));
+
+		[Test]
+		public static void ToFloatWithFalseBool() =>
+			Assert.That(Utils.ToFloat(false), Is.EqualTo(0f));
+
+		[Test]
+		public static void ToFloatWithParseableString()
+		{
+			var value = "1.1";
+			var expectedValue = 1.1f;
+			Assert.That(Utils.ToFloat(value), Is.EqualTo(expectedValue));
+		}
+
+		[Test]
+		public static void ToFloatWithUnparseableString() =>
+			Assert.That(() => Utils.ToFloat("quux"),
+				Throws.TypeOf<InvalidCastException>().And.Message.EqualTo("Cannot cast non-numeric YARN to NUMBAR"));
+
+		[Test]
+		public static void ToFloatWithUnsupportedType() =>
+			Assert.That(() => Utils.ToFloat(Guid.NewGuid()),
+				Throws.TypeOf<InvalidCastException>().And.Message.EqualTo($"Cannot cast type \"{typeof(Guid).Name}\" to NUMBAR"));
+
+		[Test]
+		public static void PrintObjectWithNonDictionaryAndNoNewLine()
+		{
+			using (var writer = new StringWriter())
+			{
+				Utils.PrintObject(writer, "a", false);
+				var builder = writer.GetStringBuilder();
+				Assert.That(builder.ToString(), Is.EqualTo("a"));
+			}
+		}
+
+		[Test]
+		public static void PrintObjectWithNonDictionaryAndNewLine()
+		{
+			using (var writer = new StringWriter())
+			{
+				Utils.PrintObject(writer, "a", true);
+				var builder = writer.GetStringBuilder();
+				Assert.That(builder.ToString(), Is.EqualTo($"a{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
+		public static void PrintObjectWithDictionaryAndNoNewLine()
+		{
+			using (var writer = new StringWriter())
+			{
+				Utils.PrintObject(writer, new Dictionary<object, object> { { 1, "a" }, { 2, "b" } }, false);
+				var builder = writer.GetStringBuilder();
+				Assert.That(builder.ToString(), Is.EqualTo("ab"));
+			}
+		}
+
+		[Test]
+		public static void PrintObjectWithDictionaryAndNewLine()
+		{
+			using (var writer = new StringWriter())
+			{
+				Utils.PrintObject(writer, new Dictionary<object, object> { { 1, "a" }, { 2, "b" } }, true);
+				var builder = writer.GetStringBuilder();
+				Assert.That(builder.ToString(), Is.EqualTo($"a{Environment.NewLine}b{Environment.NewLine}"));
+			}
+		}
 	}
 }
