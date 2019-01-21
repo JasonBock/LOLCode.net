@@ -327,5 +327,71 @@ namespace LOLCode.Compiler.Tests
 		[Test]
 		public static void CallSAEMWithObjectsNotEqual() =>
 			Assert.That(Core.SAEM("a", "b"), Is.False);
+
+		[Test]
+		public static void CallDIFFRINTWithIntAndFloatEqual() =>
+			Assert.That(Core.DIFFRINT(2, 2.0f), Is.False);
+
+		[Test]
+		public static void CallDIFFRINTWithIntAndFloatNotEqual() =>
+			Assert.That(Core.DIFFRINT(2, 1.0f), Is.True);
+
+		[Test]
+		public static void CallDIFFRINTWithFloatAndIntEqual() =>
+			Assert.That(Core.DIFFRINT(2.0f, 2), Is.False);
+
+		[Test]
+		public static void CallDIFFRINTWithFloatAndIntNotEqual() =>
+			Assert.That(Core.DIFFRINT(1.0f, 2), Is.True);
+
+		[Test]
+		public static void CallDIFFRINTWithObjectsEqual() =>
+			Assert.That(Core.DIFFRINT("a", "a"), Is.False);
+
+		[Test]
+		public static void CallDIFFRINTWithObjectsNotEqual() =>
+			Assert.That(Core.DIFFRINT("a", "b"), Is.True);
+
+		[Test]
+		public static void CallSMOOSHWithNoValues() =>
+			Assert.That(Core.SMOOSH(), Is.EqualTo(string.Empty));
+
+		[Test]
+		public static void CallSMOOSHWithValues() =>
+			Assert.That(Core.SMOOSH("a", "b", "c"), Is.EqualTo("abc"));
+
+		[Test]
+		public static void CallUPPINWithStringInt() =>
+			Assert.That(Core.UPPIN("1"), Is.EqualTo(2));
+
+		[Test]
+		public static void CallUPPINWithInt() =>
+			Assert.That(Core.UPPIN(1), Is.EqualTo(2));
+
+		[Test]
+		public static void CallUPPINWithFloat() =>
+			Assert.That(Core.UPPIN(1.0f), Is.EqualTo(1.0f + 1));
+
+		[Test]
+		public static void CallUPPINWithUnsupportedType() =>
+			Assert.That(() => Core.UPPIN(Guid.NewGuid()),
+				Throws.TypeOf<ArgumentException>().And.Message.EqualTo($"Cannot call UPPIN on value of type {typeof(Guid).Name}"));
+
+		[Test]
+		public static void CallNERFINWithStringInt() =>
+			Assert.That(Core.NERFIN("2"), Is.EqualTo(1));
+
+		[Test]
+		public static void CallNERFINWithInt() =>
+			Assert.That(Core.NERFIN(2), Is.EqualTo(1));
+
+		[Test]
+		public static void CallNERFINWithFloat() =>
+			Assert.That(Core.NERFIN(2.0f), Is.EqualTo(2.0f - 1));
+
+		[Test]
+		public static void CallNERFINWithUnsupportedType() =>
+			Assert.That(() => Core.NERFIN(Guid.NewGuid()),
+				Throws.TypeOf<ArgumentException>().And.Message.EqualTo($"Cannot call NERFIN on value of type {typeof(Guid).Name}"));
 	}
 }
