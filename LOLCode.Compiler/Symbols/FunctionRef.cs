@@ -6,6 +6,7 @@ namespace LOLCode.Compiler.Symbols
 	internal abstract class FunctionRef 
 		: SymbolRef
 	{
+		// TODO: All of these should be readonly.
 		public int Arity;
 		public bool IsVariadic;
 		public Type ReturnType;

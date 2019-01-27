@@ -2,9 +2,11 @@
 
 namespace LOLCode.Compiler.Symbols
 {
+	// TODO: Should be sealed
 	internal class GlobalRef 
 		: VariableRef
 	{
+		// Should be readonly
 		public FieldBuilder Field;
 
 		public GlobalRef(string name)

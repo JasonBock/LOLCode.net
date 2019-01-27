@@ -14,6 +14,7 @@ namespace LOLCode.Compiler.Syntax
 
 		public override void Emit(LOLMethod lm, ILGenerator gen) => this.Emit(lm, typeof(object), gen);
 
+		// TODO: This should be protected
 		public Expression(CodePragma loc) : base(loc) { }
 
 		public static void EmitCast(ILGenerator gen, Type from, Type to)

@@ -3,8 +3,11 @@ using System.Reflection;
 
 namespace LOLCode.Compiler.Symbols
 {
-	internal class ImportFunctionRef : FunctionRef
+	// TODO: Make this sealed
+	internal class ImportFunctionRef
+		: FunctionRef
 	{
+		// TODO: Can probably get rid of the field and make the property read-only.
 		private readonly MethodInfo m_Method;
 
 		public override MethodInfo Method => this.m_Method;
@@ -14,7 +17,8 @@ namespace LOLCode.Compiler.Symbols
 			this.Name = name;
 
 			var pi = m.GetParameters();
-			if (pi[pi.Length - 1].GetCustomAttributes(typeof(ParamArrayAttribute), true).Length > 0)
+			// TODO: I think using GetCustomAttributeData should be quicker.
+			if(pi.Length > 0 && pi[pi.Length - 1].GetCustomAttributes(typeof(ParamArrayAttribute), true).Length > 0)
 			{
 				this.Arity = pi.Length - 1;
 				this.IsVariadic = true;

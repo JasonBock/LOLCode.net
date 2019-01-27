@@ -2,6 +2,7 @@
 
 namespace LOLCode.Compiler.Symbols
 {
+	// TODO: Should be sealed
 	internal class Scope 
 		: IEnumerable<SymbolRef>
 	{

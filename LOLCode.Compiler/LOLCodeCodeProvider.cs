@@ -22,9 +22,11 @@ namespace LOLCode.Compiler
 		[Obsolete]
 		public override ICodeParser CreateParser() => throw new Exception("The method or operation is not implemented.");
 
-		public CompilerResults CompileAssemblyFromDom(CompilerParameters options, System.CodeDom.CodeCompileUnit compilationUnit) => throw new Exception("The method or operation is not implemented.");
+		public CompilerResults CompileAssemblyFromDom(CompilerParameters options, System.CodeDom.CodeCompileUnit compilationUnit) => 
+			throw new Exception("The method or operation is not implemented.");
 
-		public CompilerResults CompileAssemblyFromDomBatch(CompilerParameters options, System.CodeDom.CodeCompileUnit[] compilationUnits) => throw new Exception("The method or operation is not implemented.");
+		public CompilerResults CompileAssemblyFromDomBatch(CompilerParameters options, System.CodeDom.CodeCompileUnit[] compilationUnits) => 
+			throw new Exception("The method or operation is not implemented.");
 
 		public CompilerResults CompileAssemblyFromFile(CompilerParameters options, string fileName) => this.CompileAssemblyFromFileBatch(options, new string[] { fileName });
 
