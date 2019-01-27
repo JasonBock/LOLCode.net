@@ -6,8 +6,10 @@ namespace LOLCode.Compiler.Syntax
 	internal abstract class Statement 
 		: CodeObject
 	{
-		public abstract void Emit(LOLMethod lm, ILGenerator gen);
+		// TODO: Make this protected
+		public Statement(CodePragma loc) 
+			: base(loc) { }
 
-		public Statement(CodePragma loc) : base(loc) { }
+		public abstract void Emit(LOLMethod lm, ILGenerator gen);
 	}
 }

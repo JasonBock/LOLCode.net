@@ -4,16 +4,20 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: make this sealed
 	internal class ConditionalStatement 
 		: Statement
 	{
+		// TODO: Make these readonly
 		public Expression condition;
 		public Statement trueStatements;
 		public Statement falseStatements;
 		public Label ifFalse;
 		public Label statementEnd;
-
 		private bool invert = false;
+
+		public ConditionalStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -67,7 +71,5 @@ namespace LOLCode.Compiler.Syntax
 				this.falseStatements.Process(lm, errors, gen);
 			}
 		}
-
-		public ConditionalStatement(CodePragma loc) : base(loc) { }
 	}
 }

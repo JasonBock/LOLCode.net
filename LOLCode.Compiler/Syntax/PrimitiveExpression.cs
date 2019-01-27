@@ -5,12 +5,18 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make it sealed
 	internal class PrimitiveExpression 
 		: Expression
 	{
+		// TODO: Make this readonly
 		public object value;
 
-		public override Type EvaluationType => this.value.GetType();
+		public PrimitiveExpression(CodePragma loc) 
+			: base(loc) { }
+
+		public PrimitiveExpression(CodePragma loc, object val) 
+			: base(loc) => this.value = val;
 
 		public override void Emit(LOLMethod lm, Type t, ILGenerator gen)
 		{
@@ -76,7 +82,6 @@ namespace LOLCode.Compiler.Syntax
 			return;
 		}
 
-		public PrimitiveExpression(CodePragma loc) : base(loc) { }
-		public PrimitiveExpression(CodePragma loc, object val) : base(loc) => this.value = val;
+		public override Type EvaluationType => this.value.GetType();
 	}
 }

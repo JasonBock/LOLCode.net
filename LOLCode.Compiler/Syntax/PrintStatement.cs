@@ -6,12 +6,17 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed
 	internal class PrintStatement 
 		: Statement
 	{
+		// TODO: make all of these readonly
 		public bool stderr = false;
 		public Expression message;
 		public bool newline = true;
+
+		public PrintStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -44,7 +49,5 @@ namespace LOLCode.Compiler.Syntax
 		}
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => this.message.Process(lm, errors, gen);
-
-		public PrintStatement(CodePragma loc) : base(loc) { }
 	}
 }

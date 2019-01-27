@@ -3,8 +3,10 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: make this sealed
 	internal class CodePragma
 	{
+		// TODO: make all of these readonly
 		public ISymbolDocumentWriter doc;
 		public string filename;
 		public int startLine;

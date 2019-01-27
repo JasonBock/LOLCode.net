@@ -1,7 +1,5 @@
 using System;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("RockQuarry")]
-
 namespace LOLCode.Compiler
 {
 	// NOTE/TODO:

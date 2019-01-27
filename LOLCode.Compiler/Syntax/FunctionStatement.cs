@@ -7,13 +7,19 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: make it sealed
 	internal class FunctionExpression 
 		: Expression
 	{
+		// TODO: make these readonly
 		public FunctionRef func;
 		public List<Expression> arguments = new List<Expression>();
 
-		public override Type EvaluationType => this.func.ReturnType;
+		public FunctionExpression(CodePragma loc) 
+			: base(loc) { }
+
+		public FunctionExpression(CodePragma loc, FunctionRef fr) 
+			: base(loc) => this.func = fr;
 
 		public override void Emit(LOLMethod lm, Type t, ILGenerator gen)
 		{
@@ -73,8 +79,6 @@ namespace LOLCode.Compiler.Syntax
 			}
 		}
 
-		public FunctionExpression(CodePragma loc) : base(loc) { }
-
-		public FunctionExpression(CodePragma loc, FunctionRef fr) : base(loc) => this.func = fr;
+		public override Type EvaluationType => this.func.ReturnType;
 	}
 }

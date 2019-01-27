@@ -7,10 +7,16 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
-	internal class InputStatement : Statement
+	// TODO: make it sealed
+	internal class InputStatement 
+		: Statement
 	{
+		// TODO: make these readonly
 		public IOAmount amount = IOAmount.Line;
 		public LValue dest;
+
+		public InputStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -36,7 +42,5 @@ namespace LOLCode.Compiler.Syntax
 		}
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => this.dest.Process(lm, errors, gen);
-
-		public InputStatement(CodePragma loc) : base(loc) { }
 	}
 }

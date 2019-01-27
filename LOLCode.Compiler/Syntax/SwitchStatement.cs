@@ -7,47 +7,20 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed
 	internal class SwitchStatement
 		: BreakableStatement
 	{
-		public class Case : IComparable<Case>
-		{
-			public object name;
-			public Statement statement;
-			public Label label;
-
-			public Case(object name, Statement stat)
-			{
-				this.name = name;
-				this.statement = stat;
-			}
-
-			public int CompareTo(Case other)
-			{
-				if (this.name is int)
-				{
-					return ((int)this.name).CompareTo((int)other.name);
-				}
-				else
-				{
-					return (this.name as string).CompareTo(other.name as string);
-				}
-			}
-		}
-
+		// TODO: make these readonly and/or immutable
 		public List<Case> cases = new List<Case>();
 		public Statement defaultCase = null;
 		public Expression control;
-
 		private Case[] sortedCases = null;
 		private Label m_breakLabel;
 		private Label defaultLabel;
 
-		public override string Name => null;
-
-		public override Label? BreakLabel => this.m_breakLabel;
-
-		public override Label? ContinueLabel => null;
+		public SwitchStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -278,6 +251,36 @@ namespace LOLCode.Compiler.Syntax
 			lm.breakables.RemoveAt(lm.breakables.Count - 1);
 		}
 
-		public SwitchStatement(CodePragma loc) : base(loc) { }
+		public override string Name => null;
+
+		public override Label? BreakLabel => this.m_breakLabel;
+
+		public override Label? ContinueLabel => null;
+
+		// TODO: Make this sealed
+		public class Case : IComparable<Case>
+		{
+			public object name;
+			public Statement statement;
+			public Label label;
+
+			public Case(object name, Statement stat)
+			{
+				this.name = name;
+				this.statement = stat;
+			}
+
+			public int CompareTo(Case other)
+			{
+				if (this.name is int)
+				{
+					return ((int)this.name).CompareTo((int)other.name);
+				}
+				else
+				{
+					return (this.name as string).CompareTo(other.name as string);
+				}
+			}
+		}
 	}
 }

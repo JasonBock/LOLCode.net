@@ -5,13 +5,19 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed
 	internal class TypecastExpression 
 		: Expression
 	{
+		// TODO: Make these readonly
 		public Type destType;
 		public Expression exp;
 
-		public override Type EvaluationType => this.destType;
+		public TypecastExpression(CodePragma loc) 
+			: base(loc) { }
+
+		public TypecastExpression(CodePragma loc, Type t, Expression exp)
+			: base(loc) => (this.destType, this.exp) = (t, exp);
 
 		public override void Emit(LOLMethod lm, Type t, ILGenerator gen)
 		{
@@ -24,12 +30,6 @@ namespace LOLCode.Compiler.Syntax
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => this.exp.Process(lm, errors, gen);
 
-		public TypecastExpression(CodePragma loc) : base(loc) { }
-
-		public TypecastExpression(CodePragma loc, Type t, Expression exp) : base(loc)
-		{
-			this.destType = t;
-			this.exp = exp;
-		}
+		public override Type EvaluationType => this.destType;
 	}
 }

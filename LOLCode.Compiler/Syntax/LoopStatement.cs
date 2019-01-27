@@ -6,23 +6,21 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed 
 	internal class LoopStatement 
 		: BreakableStatement
 	{
+		// TODO: Make all of these readonly
 		public string name = null;
 		public Statement statements;
 		public Statement operation;
 		public LoopType type = LoopType.Infinite;
 		public Expression condition;
-
 		private Label m_breakLabel;
 		private Label m_continueLabel;
 
-		public override Label? BreakLabel => this.m_breakLabel;
-
-		public override Label? ContinueLabel => this.m_continueLabel;
-
-		public override string Name => this.name;
+		public LoopStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -93,6 +91,10 @@ namespace LOLCode.Compiler.Syntax
 
 		public VariableRef GetLoopVariable() => ((this.operation as AssignmentStatement).lval as VariableLValue).var;
 
-		public LoopStatement(CodePragma loc) : base(loc) { }
+		public override Label? BreakLabel => this.m_breakLabel;
+
+		public override Label? ContinueLabel => this.m_continueLabel;
+
+		public override string Name => this.name;
 	}
 }

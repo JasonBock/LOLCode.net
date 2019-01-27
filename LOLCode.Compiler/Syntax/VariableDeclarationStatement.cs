@@ -5,11 +5,16 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed 
 	internal class VariableDeclarationStatement 
 		: Statement
 	{
+		// TODO: Make these readonly
 		public VariableRef var;
 		public Expression expression = null;
+
+		public VariableDeclarationStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -35,7 +40,5 @@ namespace LOLCode.Compiler.Syntax
 		}
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) { }
-
-		public VariableDeclarationStatement(CodePragma loc) : base(loc) { }
 	}
 }

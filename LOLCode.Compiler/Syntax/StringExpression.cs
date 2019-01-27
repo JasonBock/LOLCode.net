@@ -9,13 +9,25 @@ using System.Text;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed 
 	internal class StringExpression 
 		: Expression
 	{
 		private readonly LValue[] vars;
 		private readonly string str;
 
-		public override Type EvaluationType => typeof(string);
+		public StringExpression(CodePragma loc, string str, Scope s, Errors e) 
+			: base(loc)
+		{
+			var refs = new List<VariableRef>();
+			this.str = UnescapeString(str, s, e, this.location, refs);
+
+			this.vars = new LValue[refs.Count];
+			for (var i = 0; i < this.vars.Length; i++)
+			{
+				this.vars[i] = new VariableLValue(this.location, refs[i]);
+			}
+		}
 
 		public override void Emit(LOLMethod lm, Type t, ILGenerator gen)
 		{
@@ -132,16 +144,6 @@ namespace LOLCode.Compiler.Syntax
 			return ret.ToString();
 		}
 
-		public StringExpression(CodePragma loc, string str, Scope s, Errors e) : base(loc)
-		{
-			var refs = new List<VariableRef>();
-			this.str = UnescapeString(str, s, e, this.location, refs);
-
-			this.vars = new LValue[refs.Count];
-			for (var i = 0; i < this.vars.Length; i++)
-			{
-				this.vars[i] = new VariableLValue(this.location, refs[i]);
-			}
-		}
+		public override Type EvaluationType => typeof(string);
 	}
 }

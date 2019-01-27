@@ -4,11 +4,16 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: make it sealed
 	internal class ContinueStatement 
 		: Statement
 	{
+		// TODO: These should be readonly
 		public string label = null;
 		private int breakIdx = -1;
+
+		public ContinueStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -49,7 +54,5 @@ namespace LOLCode.Compiler.Syntax
 				}
 			}
 		}
-
-		public ContinueStatement(CodePragma loc) : base(loc) { }
 	}
 }

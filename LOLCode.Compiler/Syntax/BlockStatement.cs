@@ -5,10 +5,14 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed
 	internal class BlockStatement 
 		: Statement
 	{
+		// TODO: Make this readonly (and immutable)
 		public List<Statement> statements = new List<Statement>();
+		public BlockStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -25,7 +29,5 @@ namespace LOLCode.Compiler.Syntax
 				stat.Process(lm, errors, gen);
 			}
 		}
-
-		public BlockStatement(CodePragma loc) : base(loc) { }
 	}
 }

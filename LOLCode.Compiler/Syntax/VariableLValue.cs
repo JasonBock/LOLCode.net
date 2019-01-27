@@ -6,12 +6,18 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make this sealed
 	internal class VariableLValue 
 		: LValue
 	{
+		// TODO: Make this readonly
 		public VariableRef var;
 
-		public override Type EvaluationType => this.var.Type;
+		public VariableLValue(CodePragma loc) 
+			: base(loc) { }
+
+		public VariableLValue(CodePragma loc, VariableRef vr) 
+			: base(loc) => this.var = vr;
 
 		public override void EmitGet(LOLMethod lm, Type t, ILGenerator gen)
 		{
@@ -62,7 +68,6 @@ namespace LOLCode.Compiler.Syntax
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) { }
 
-		public VariableLValue(CodePragma loc) : base(loc) { }
-		public VariableLValue(CodePragma loc, VariableRef vr) : base(loc) => this.var = vr;
+		public override Type EvaluationType => this.var.Type;
 	}
 }

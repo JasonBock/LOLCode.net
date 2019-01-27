@@ -4,10 +4,15 @@ using System.Reflection.Emit;
 
 namespace LOLCode.Compiler.Syntax
 {
+	// TODO: Make it sealed
 	internal class ReturnStatement 
 		: Statement
 	{
+		// TODO: Make it readonly
 		public Expression expression;
+
+		public ReturnStatement(CodePragma loc) 
+			: base(loc) { }
 
 		public override void Emit(LOLMethod lm, ILGenerator gen)
 		{
@@ -17,7 +22,5 @@ namespace LOLCode.Compiler.Syntax
 
 		public override void Process(LOLMethod lm, CompilerErrorCollection errors, ILGenerator gen) => 
 			this.expression.Process(lm, errors, gen);
-
-		public ReturnStatement(CodePragma loc) : base(loc) { }
 	}
 }
