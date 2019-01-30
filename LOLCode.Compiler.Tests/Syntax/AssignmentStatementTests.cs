@@ -26,10 +26,9 @@ namespace LOLCode.Compiler.Tests.Syntax
 			{
 				lval = new MockLValue(pragma),
 				rval = new MockExpression(pragma),
-				location = pragma
 			};
 			statement.Emit(method, ilGenerator);
-			Assert.That(ilGenerator.ILOffset, Is.EqualTo(2));
+			Assert.That(ilGenerator.ILOffset, Is.EqualTo(2), nameof(ilGenerator.ILOffset));
 		}
 
 		[Test]
@@ -45,7 +44,8 @@ namespace LOLCode.Compiler.Tests.Syntax
 			};
 			statement.Process(method, errors, ilGenerator);
 
-			Assert.That(ilGenerator.ILOffset, Is.EqualTo(3));
+			Assert.That(ilGenerator.ILOffset, Is.EqualTo(3), nameof(ilGenerator.ILOffset));
+			Assert.That(errors.Count, Is.EqualTo(0), nameof(errors.Count));
 		}
 	}
 }

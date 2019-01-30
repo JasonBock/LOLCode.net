@@ -30,7 +30,6 @@ namespace LOLCode.Compiler.Tests.Syntax
 				falseStatements = new MockStatement(pragma),
 				ifFalse = ilGenerator.DefineLabel(),
 				statementEnd = ilGenerator.DefineLabel(),
-				location = pragma
 			};
 			statement.Emit(method, ilGenerator);
 			Assert.That(ilGenerator.ILOffset, Is.EqualTo(13), nameof(ilGenerator.ILOffset));
@@ -47,10 +46,10 @@ namespace LOLCode.Compiler.Tests.Syntax
 				condition = new MockExpression(pragma),
 				trueStatements = new MockStatement(pragma),
 				falseStatements = new MockStatement(pragma),
-				location = pragma
 			};
 			statement.Process(method, errors, ilGenerator);
 			Assert.That(ilGenerator.ILOffset, Is.EqualTo(6), nameof(ilGenerator.ILOffset));
+			Assert.That(errors.Count, Is.EqualTo(0), nameof(errors.Count));
 		}
 	}
 }

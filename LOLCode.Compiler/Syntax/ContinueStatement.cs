@@ -19,6 +19,8 @@ namespace LOLCode.Compiler.Syntax
 		{
 			this.location.MarkSequencePoint(gen);
 
+			// TODO: This needs to be addressed. If you call this after the ctor,
+			// you'll get an index exception. What's the right thing to do?
 			gen.Emit(OpCodes.Br, lm.breakables[this.breakIdx].ContinueLabel.Value);
 		}
 
