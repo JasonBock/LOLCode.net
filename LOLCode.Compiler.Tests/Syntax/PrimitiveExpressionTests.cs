@@ -1,6 +1,5 @@
 ﻿using LOLCode.Compiler.Syntax;
 using NUnit.Framework;
-using System;
 using System.CodeDom.Compiler;
 
 namespace LOLCode.Compiler.Tests.Syntax
